@@ -19,7 +19,6 @@ public class User {
 
     private String phone;
 
-    // 🔹 Constructors
     public User() {}
 
     public User(String name, String email, String password, String phone) {
@@ -29,7 +28,6 @@ public class User {
         this.phone = phone;
     }
 
-    // 🔹 Getters and Setters
     public int getUserId() {
         return userId;
     }
