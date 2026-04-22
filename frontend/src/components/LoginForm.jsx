@@ -7,7 +7,7 @@ const initialFormData = {
   password: '',
 }
 
-function LoginForm({ onSwitchToRegister }) {
+function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ type: '', message: '' })
@@ -75,6 +75,10 @@ function LoginForm({ onSwitchToRegister }) {
         message: result.message || 'Login successful.',
       })
       setFormData(initialFormData)
+      onLoginSuccess({
+        email: formData.email.trim(),
+        ...result,
+      })
     } catch (error) {
       console.error(error)
       setStatus({

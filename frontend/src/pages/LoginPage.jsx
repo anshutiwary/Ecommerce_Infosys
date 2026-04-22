@@ -1,6 +1,6 @@
 import LoginForm from '../components/LoginForm'
 
-function LoginPage({ onSwitchToRegister }) {
+function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
   return (
     <main className="register-page">
       <section className="register-card">
@@ -10,7 +10,10 @@ function LoginPage({ onSwitchToRegister }) {
             Sign in to access your dashboard and continue your work.
           </p>
         </div>
-        <LoginForm onSwitchToRegister={onSwitchToRegister} />
+        <LoginForm
+          onLoginSuccess={onLoginSuccess}
+          onSwitchToRegister={onSwitchToRegister}
+        />
       </section>
     </main>
   )

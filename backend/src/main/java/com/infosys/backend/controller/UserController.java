@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.infosys.backend.dto.AuthResponse;
 import com.infosys.backend.dto.LoginRequest;
 import com.infosys.backend.model.User;
 import com.infosys.backend.service.UserService;
@@ -25,10 +26,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            String token = userService.authenticateUser(loginRequest.getEmail(), loginRequest.getPassword());
-            return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
+            AuthResponse authResponse = userService.authenticateUser(
+                    loginRequest.getEmail(),
+                    loginRequest.getPassword());
+            return ResponseEntity.ok(authResponse);
         } catch (RuntimeException ex) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)

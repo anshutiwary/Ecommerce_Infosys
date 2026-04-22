@@ -3,6 +3,7 @@ package com.infosys.backend.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.infosys.backend.dto.AuthResponse;
 import com.infosys.backend.model.User;
 import com.infosys.backend.repository.UserRepository;
 import com.infosys.backend.security.JwtConfig;
@@ -25,7 +26,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public String authenticateUser(String email, String password) {
+    public AuthResponse authenticateUser(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -33,6 +34,8 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return jwtConfig.generateToken(user.getEmail());
+        String token = jwtConfig.generateToken(user.getEmail());
+
+        return new AuthResponse("Login successful", token, user.getEmail(), user.getName());
     }
 }
