@@ -136,7 +136,7 @@
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, #1d4ed8, #2563eb, #0f172a);
+  background: #722f37;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -145,12 +145,34 @@
 
 .register-form button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.28);
+  box-shadow: 0 14px 30px rgba(114, 47, 55, 0.28);
 }
 
 .register-form button:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+.form-switch {
+  margin: 0;
+  text-align: center;
+  color: #475569;
+}
+
+.form-switch-link {
+  color: #2563eb;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form-switch-link:hover {
+  text-decoration: underline;
+}
+
+.form-switch-link:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 4px;
+  border-radius: 6px;
 }
 
 @media (max-width: 820px) {

@@ -1,16 +1,13 @@
 import { useState } from 'react'
-import { registerUser } from '../services/authService'
+import { loginUser } from '../services/authService'
 import '../styles/register.css'
 
 const initialFormData = {
-  name: '',
   email: '',
-  phone: '',
   password: '',
-  confirmPassword: '',
 }
 
-function RegisterForm({ onSwitchToLogin }) {
+function LoginForm({ onSwitchToRegister }) {
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ type: '', message: '' })
@@ -43,28 +40,12 @@ function RegisterForm({ onSwitchToLogin }) {
   const validateForm = () => {
     const nextErrors = {}
 
-    if (!formData.name.trim()) {
-      nextErrors.name = 'Name is required.'
-    }
-
     if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
       nextErrors.email = 'Enter a valid email address.'
     }
 
-    if (!/^\d{10}$/.test(formData.phone)) {
-      nextErrors.phone = 'Phone number must be exactly 10 digits.'
-    }
-
-    const passwordRegex =
-      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/
-
-    if (!passwordRegex.test(formData.password)) {
-      nextErrors.password =
-        'Password must be 8+ characters and include uppercase, lowercase, number, and special character.'
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      nextErrors.confirmPassword = 'Passwords do not match.'
+    if (!formData.password.trim()) {
+      nextErrors.password = 'Password is required.'
     }
 
     setErrors(nextErrors)
@@ -79,30 +60,26 @@ function RegisterForm({ onSwitchToLogin }) {
       return
     }
 
-    const payload = {
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      phone: formData.phone.trim(),
-      password: formData.password,
-    }
-
     setIsSubmitting(true)
     setStatus({ type: '', message: '' })
 
     try {
-      const result = await registerUser(payload)
+      const result = await loginUser({
+        email: formData.email.trim(),
+        password: formData.password,
+      })
 
       setErrors({})
       setStatus({
         type: 'success',
-        message: result.message || 'Registration successful.',
+        message: result.message || 'Login successful.',
       })
       setFormData(initialFormData)
     } catch (error) {
       console.error(error)
       setStatus({
         type: 'error',
-        message: error.message || 'Unable to register right now.',
+        message: error.message || 'Unable to login right now.',
       })
     } finally {
       setIsSubmitting(false)
@@ -112,20 +89,9 @@ function RegisterForm({ onSwitchToLogin }) {
   return (
     <form className="register-form" onSubmit={handleSubmit}>
       <div className="form-heading">
-        <h2>Register</h2>
-        <p>Fill in your details below.</p>
+        <h2>Login</h2>
+        <p>Use your email and password to continue.</p>
       </div>
-
-      <label className="form-field">
-        <span>Full Name</span>
-        <input
-          name="name"
-          placeholder="Enter your full name"
-          value={formData.name}
-          onChange={handleChange}
-        />
-        {errors.name ? <small className="field-error">{errors.name}</small> : null}
-      </label>
 
       <label className="form-field">
         <span>Email</span>
@@ -140,24 +106,11 @@ function RegisterForm({ onSwitchToLogin }) {
       </label>
 
       <label className="form-field">
-        <span>Phone Number</span>
-        <input
-          name="phone"
-          inputMode="numeric"
-          maxLength="10"
-          placeholder="9876543210"
-          value={formData.phone}
-          onChange={handleChange}
-        />
-        {errors.phone ? <small className="field-error">{errors.phone}</small> : null}
-      </label>
-
-      <label className="form-field">
         <span>Password</span>
         <input
           type="password"
           name="password"
-          placeholder="Create a strong password"
+          placeholder="Enter your password"
           value={formData.password}
           onChange={handleChange}
         />
@@ -166,46 +119,32 @@ function RegisterForm({ onSwitchToLogin }) {
         ) : null}
       </label>
 
-      <label className="form-field">
-        <span>Confirm Password</span>
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Re-enter your password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-        />
-        {errors.confirmPassword ? (
-          <small className="field-error">{errors.confirmPassword}</small>
-        ) : null}
-      </label>
-
       {status.message ? (
         <p className={`form-status ${status.type}`}>{status.message}</p>
       ) : null}
 
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Creating account...' : 'Create Account'}
+        {isSubmitting ? 'Signing in...' : 'Login'}
       </button>
 
       <p className="form-switch">
-        Already have an account?{' '}
+        Don&apos;t have an account?{' '}
         <span
           className="form-switch-link"
           role="button"
           tabIndex={0}
-          onClick={onSwitchToLogin}
+          onClick={onSwitchToRegister}
           onKeyDown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
-              onSwitchToLogin()
+              onSwitchToRegister()
             }
           }}
         >
-          Login
+          Register
         </span>
       </p>
     </form>
   )
 }
 
-export default RegisterForm
+export default LoginForm

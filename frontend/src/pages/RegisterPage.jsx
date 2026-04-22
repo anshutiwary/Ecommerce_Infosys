@@ -1,6 +1,6 @@
 import RegisterForm from '../components/RegisterForm'
 
-function RegisterPage() {
+function RegisterPage({ onSwitchToLogin }) {
   return (
     <main className="register-page">
       <section className="register-card">
@@ -10,7 +10,7 @@ function RegisterPage() {
             Register with your details to get started.
           </p>
         </div>
-        <RegisterForm />
+        <RegisterForm onSwitchToLogin={onSwitchToLogin} />
       </section>
     </main>
   )
