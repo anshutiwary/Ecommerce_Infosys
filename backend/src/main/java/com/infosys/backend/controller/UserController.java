@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.infosys.backend.dto.AuthResponse;
@@ -35,6 +36,21 @@ public class UserController {
         } catch (RuntimeException ex) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getDashboard(Authentication authentication) {
+        try {
+            User user = userService.getUserByEmail(authentication.getName());
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Welcome to your dashboard, " + user.getName() + "!"
+            ));
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", ex.getMessage()));
         }
     }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import { clearStoredBearerToken } from './services/authService'
 
 function App() {
   const [authMode, setAuthMode] = useState('login')
@@ -13,6 +14,7 @@ function App() {
   }
 
   const handleLogout = () => {
+    clearStoredBearerToken()
     setCurrentUser(null)
     setAuthMode('login')
   }
