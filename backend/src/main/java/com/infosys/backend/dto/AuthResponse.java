@@ -1,5 +1,7 @@
 package com.infosys.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class AuthResponse {
 
     private String message;
@@ -22,6 +24,7 @@ public class AuthResponse {
         this.message = message;
     }
 
+    @JsonIgnore
     public String getToken() {
         return token;
     }
