@@ -3,6 +3,8 @@ package com.infosys.backend.model;
 import java.math.BigDecimal;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "products")
@@ -21,15 +23,21 @@ public class Product {
     private int quantity;
 
     private String category;
+    @Getter @Setter
+    private String imageUrl;
+    @Getter @Setter
+    private Boolean isActive;
 
     public Product() {}
 
-    public Product(String name, String description, BigDecimal price, int quantity, String category) {
+    public Product(String name, String description, BigDecimal price, int quantity, String category, String imageUrl, Boolean isActive) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.quantity = quantity;
         this.category = category;
+        this.imageUrl = imageUrl;
+        this.isActive = isActive;
     }
 
     public int getProductId() {

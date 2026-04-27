@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { loginUser } from '../services/authService'
-import '../styles/register.css'
 
 const initialFormData = {
   email: '',

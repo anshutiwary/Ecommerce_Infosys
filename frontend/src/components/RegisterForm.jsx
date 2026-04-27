@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { registerUser } from '../services/authService'
-import '../styles/register.css'
 
 const initialFormData = {
   name: '',

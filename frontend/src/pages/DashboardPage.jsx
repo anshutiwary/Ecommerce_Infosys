@@ -1,7 +1,5 @@
-import '../styles/register.css'
-
 function DashboardPage({ user, onLogout }) {
-  const displayName = user?.name ||  'User'
+  const displayName = user?.name || 'User'
 
   return (
     <main className="dashboard-page">

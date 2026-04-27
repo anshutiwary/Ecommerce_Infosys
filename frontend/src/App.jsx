@@ -1,4 +1,11 @@
 import { useEffect, useState } from 'react'
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useNavigate,
+} from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -6,14 +13,15 @@ import {
   logoutUser,
   verifyStoredSession,
 } from './services/authService'
+import './styles/register.css'
 
 const getUserFromSession = (sessionData) =>
   sessionData?.user || sessionData?.data?.user || sessionData?.data || sessionData
 
-function App() {
-  const [authMode, setAuthMode] = useState('login')
+function AppRoutes() {
   const [currentUser, setCurrentUser] = useState(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     let isMounted = true
@@ -27,7 +35,6 @@ function App() {
         }
 
         setCurrentUser(getUserFromSession(sessionUser))
-        setAuthMode('dashboard')
       } catch (error) {
         console.error(error)
 
@@ -36,7 +43,6 @@ function App() {
         }
 
         setCurrentUser(null)
-        setAuthMode('login')
       } finally {
         if (isMounted) {
           setIsCheckingSession(false)
@@ -53,13 +59,13 @@ function App() {
 
   const handleLoginSuccess = (userData) => {
     setCurrentUser(userData)
-    setAuthMode('dashboard')
+    navigate('/dashboard', { replace: true })
   }
 
   const handleLogout = async () => {
     await logoutUser()
     setCurrentUser(null)
-    setAuthMode('login')
+    navigate('/login', { replace: true })
   }
 
   if (isCheckingSession) {
@@ -75,19 +81,57 @@ function App() {
     )
   }
 
-  if (authMode === 'dashboard' && currentUser) {
-    return <DashboardPage user={currentUser} onLogout={handleLogout} />
-  }
-
-  if (authMode === 'register') {
-    return <RegisterPage onSwitchToLogin={() => setAuthMode('login')} />
-  }
-
   return (
-    <LoginPage
-      onLoginSuccess={handleLoginSuccess}
-      onSwitchToRegister={() => setAuthMode('register')}
-    />
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Navigate to={currentUser ? '/dashboard' : '/login'} replace />
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          currentUser ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <LoginPage
+              onLoginSuccess={handleLoginSuccess}
+              onSwitchToRegister={() => navigate('/register')}
+            />
+          )
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          currentUser ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <RegisterPage onSwitchToLogin={() => navigate('/login')} />
+          )
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          currentUser ? (
+            <DashboardPage user={currentUser} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
   )
 }
 

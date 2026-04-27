@@ -26,15 +26,6 @@
   color: #0f172a;
 }
 
-.register-eyebrow {
-  margin: 0 0 12px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #2563eb;
-}
-
 .register-copy h1 {
   margin: 0;
   font-size: clamp(2.2rem, 4vw, 3.6rem);
@@ -239,8 +230,7 @@
   background: #722f37;
 }
 
-.dashboard-hero,
-.dashboard-card {
+.dashboard-hero {
   border: 1px solid rgba(148, 163, 184, 0.3);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 18px 50px rgba(30, 41, 59, 0.12);
@@ -267,35 +257,7 @@
   color: #334155;
 }
 
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 20px;
-}
-
-.dashboard-card {
-  padding: 24px;
-  border-radius: 22px;
-}
-
-.dashboard-card h3 {
-  margin: 0 0 10px;
-  color: #0f172a;
-}
-
-.dashboard-card p {
-  margin: 0;
-  line-height: 1.6;
-  color: #475569;
-}
-
 @media (max-width: 760px) {
-  .dashboard-header,
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
   .dashboard-header {
     align-items: flex-start;
     flex-direction: column;
