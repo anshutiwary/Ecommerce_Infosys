@@ -98,7 +98,6 @@ function RegisterForm({ onSwitchToLogin }) {
       })
       setFormData(initialFormData)
     } catch (error) {
-      console.error(error)
       setStatus({
         type: 'error',
         message: error.message || 'Unable to register right now.',

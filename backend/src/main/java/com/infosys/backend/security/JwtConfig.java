@@ -5,7 +5,6 @@ import java.security.Key;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.jsonwebtoken.Jwts;
@@ -22,14 +21,8 @@ public class JwtConfig {
     @Value("${jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-    @Bean
-    public Key jwtSigningKey() {
+    private Key jwtSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Bean(name = "jwtExpirationMs")
-    public Long jwtExpirationMs() {
-        return jwtExpirationMs;
     }
 
     public String generateToken(String email) {

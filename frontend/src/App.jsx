@@ -35,9 +35,7 @@ function AppRoutes() {
         }
 
         setCurrentUser(getUserFromSession(sessionUser))
-      } catch (error) {
-        console.error(error)
-
+      } catch {
         if (!isMounted) {
           return
         }

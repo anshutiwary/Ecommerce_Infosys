@@ -79,7 +79,6 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
         ...result,
       })
     } catch (error) {
-      console.error(error)
       setStatus({
         type: 'error',
         message: error.message || 'Unable to login right now.',

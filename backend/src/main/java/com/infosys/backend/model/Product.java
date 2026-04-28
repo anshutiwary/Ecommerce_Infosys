@@ -3,8 +3,6 @@ package com.infosys.backend.model;
 import java.math.BigDecimal;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
 @Table(name = "products")
@@ -23,9 +21,9 @@ public class Product {
     private int quantity;
 
     private String category;
-    @Getter @Setter
+
     private String imageUrl;
-    @Getter @Setter
+
     private Boolean isActive;
 
     public Product() {}
@@ -86,5 +84,21 @@ public class Product {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }
