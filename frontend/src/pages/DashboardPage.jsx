@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getProducts } from '../services/productService'
+import {
+  addProduct,
+  deleteProduct,
+  getProducts,
+  updateProduct,
+} from '../services/productService'
 
 const stockFilterOptions = [
   { label: 'All stock', value: 'all' },
@@ -15,16 +20,37 @@ const formatCurrency = (value) =>
     maximumFractionDigits: 2,
   }).format(Number(value || 0))
 
-const getProductId = (product) => product.productId || product.id || product.name
+const getProductId = (product) =>
+  product.productId || product.id || product._id || product.name
+
+const blankProductForm = {
+  name: '',
+  category: '',
+  price: '',
+  quantity: '',
+  imageUrl: '',
+  description: '',
+}
+
+const getNormalizedProduct = (product) => ({
+  ...product,
+  price: Number(product.price || 0),
+  quantity: Number(product.quantity || 0),
+})
 
 function DashboardPage({ user, onLogout }) {
   const displayName = user?.name || 'User'
   const [products, setProducts] = useState([])
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [productError, setProductError] = useState('')
+  const [productStatus, setProductStatus] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [stockFilter, setStockFilter] = useState('all')
+  const [productForm, setProductForm] = useState(blankProductForm)
+  const [editingProductId, setEditingProductId] = useState(null)
+  const [isSavingProduct, setIsSavingProduct] = useState(false)
+  const [deletingProductId, setDeletingProductId] = useState(null)
 
   useEffect(() => {
     let isMounted = true
@@ -109,6 +135,97 @@ function DashboardPage({ user, onLogout }) {
     setStockFilter('all')
   }
 
+  const resetProductForm = () => {
+    setProductForm(blankProductForm)
+    setEditingProductId(null)
+    setProductStatus('')
+  }
+
+  const handleProductFormChange = (event) => {
+    const { name, value } = event.target
+
+    setProductForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+    }))
+  }
+
+  const handleEditProduct = (product) => {
+    setEditingProductId(getProductId(product))
+    setProductStatus('')
+    setProductError('')
+    setProductForm({
+      name: product.name || '',
+      category: product.category || '',
+      price: product.price ?? '',
+      quantity: product.quantity ?? '',
+      imageUrl: product.imageUrl || '',
+      description: product.description || '',
+    })
+  }
+
+  const handleProductSubmit = async (event) => {
+    event.preventDefault()
+    setIsSavingProduct(true)
+    setProductError('')
+    setProductStatus('')
+
+    const productPayload = getNormalizedProduct(productForm)
+
+    try {
+      if (editingProductId) {
+        const updatedProduct = await updateProduct(editingProductId, productPayload)
+
+        setProducts((currentProducts) =>
+          currentProducts.map((product) =>
+            getProductId(product) === editingProductId ? updatedProduct : product,
+          ),
+        )
+        setProductStatus('Product updated successfully.')
+      } else {
+        const createdProduct = await addProduct(productPayload)
+
+        setProducts((currentProducts) => [createdProduct, ...currentProducts])
+        setProductStatus('Product added successfully.')
+      }
+
+      setProductForm(blankProductForm)
+      setEditingProductId(null)
+    } catch (error) {
+      setProductError(error.message || 'Unable to save product.')
+    } finally {
+      setIsSavingProduct(false)
+    }
+  }
+
+  const handleDeleteProduct = async (product) => {
+    const productId = getProductId(product)
+
+    if (!window.confirm(`Delete ${product.name || 'this product'}?`)) {
+      return
+    }
+
+    setDeletingProductId(productId)
+    setProductError('')
+    setProductStatus('')
+
+    try {
+      await deleteProduct(productId)
+      setProducts((currentProducts) =>
+        currentProducts.filter((currentProduct) => getProductId(currentProduct) !== productId),
+      )
+      setProductStatus('Product deleted successfully.')
+
+      if (editingProductId === productId) {
+        resetProductForm()
+      }
+    } catch (error) {
+      setProductError(error.message || 'Unable to delete product.')
+    } finally {
+      setDeletingProductId(null)
+    }
+  }
+
   return (
     <main className="dashboard-page">
       <section className="dashboard-shell">
@@ -142,6 +259,105 @@ function DashboardPage({ user, onLogout }) {
               Clear
             </button>
           </div>
+
+          <form className="product-form" onSubmit={handleProductSubmit}>
+            <div className="product-form-header">
+              <h3>{editingProductId ? 'Update product' : 'Add product'}</h3>
+              {editingProductId ? (
+                <button type="button" className="ghost-button" onClick={resetProductForm}>
+                  Cancel edit
+                </button>
+              ) : null}
+            </div>
+
+            <div className="product-form-grid">
+              <label>
+                <span>Name</span>
+                <input
+                  name="name"
+                  type="text"
+                  value={productForm.name}
+                  onChange={handleProductFormChange}
+                  placeholder="Cotton shirt"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Category</span>
+                <input
+                  name="category"
+                  type="text"
+                  value={productForm.category}
+                  onChange={handleProductFormChange}
+                  placeholder="Apparel"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Price</span>
+                <input
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={productForm.price}
+                  onChange={handleProductFormChange}
+                  placeholder="1499"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Quantity</span>
+                <input
+                  name="quantity"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={productForm.quantity}
+                  onChange={handleProductFormChange}
+                  placeholder="24"
+                  required
+                />
+              </label>
+
+              <label className="product-form-wide">
+                <span>Image URL</span>
+                <input
+                  name="imageUrl"
+                  type="url"
+                  value={productForm.imageUrl}
+                  onChange={handleProductFormChange}
+                  placeholder="https://example.com/product.jpg"
+                />
+              </label>
+
+              <label className="product-form-wide">
+                <span>Description</span>
+                <textarea
+                  name="description"
+                  value={productForm.description}
+                  onChange={handleProductFormChange}
+                  placeholder="Short product description"
+                  rows="3"
+                />
+              </label>
+            </div>
+
+            <button type="submit" className="primary-button" disabled={isSavingProduct}>
+              {isSavingProduct
+                ? 'Saving...'
+                : editingProductId
+                  ? 'Update product'
+                  : 'Add product'}
+            </button>
+          </form>
+
+          {productStatus ? (
+            <p className="product-message success">{productStatus}</p>
+          ) : null}
 
           <div className="product-filters">
             <label className="product-search">
@@ -213,6 +429,21 @@ function DashboardPage({ user, onLogout }) {
                     <div className="product-meta">
                       <strong>{formatCurrency(product.price)}</strong>
                       <span>{Number(product.quantity || 0)} in stock</span>
+                    </div>
+                    <div className="product-actions">
+                      <button type="button" onClick={() => handleEditProduct(product)}>
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="danger-button"
+                        onClick={() => handleDeleteProduct(product)}
+                        disabled={deletingProductId === getProductId(product)}
+                      >
+                        {deletingProductId === getProductId(product)
+                          ? 'Deleting...'
+                          : 'Delete'}
+                      </button>
                     </div>
                   </div>
                 </article>
