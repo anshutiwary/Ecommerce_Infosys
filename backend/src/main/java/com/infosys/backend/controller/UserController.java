@@ -1,6 +1,7 @@
 package com.infosys.backend.controller;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +19,18 @@ import com.infosys.backend.service.UserService;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin("*")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
     @PostMapping("/register")
-    public User registerUser(@RequestBody User user) {
-        return userService.registerUser(user);
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        User registeredUser = userService.registerUser(user);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(toSafeUserResponse(registeredUser));
     }
 
     @PostMapping("/login")
@@ -69,6 +73,25 @@ public class UserController {
                 .body(Map.of("message", "Logged out successfully"));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized"));
+        }
+
+        try {
+            User user = userService.getUserByEmail(authentication.getName());
+
+            return ResponseEntity.ok(toSafeUserResponse(user));
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboard(Authentication authentication) {
         try {
@@ -82,5 +105,17 @@ public class UserController {
                     .status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", ex.getMessage()));
         }
+    }
+
+    private Map<String, Object> toSafeUserResponse(User user) {
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("userId", user.getUserId());
+        response.put("name", user.getName());
+        response.put("email", user.getEmail());
+        response.put("phone", user.getPhone());
+        response.put("role", user.getRole());
+
+        return response;
     }
 }

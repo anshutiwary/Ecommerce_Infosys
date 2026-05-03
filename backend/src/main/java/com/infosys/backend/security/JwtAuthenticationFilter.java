@@ -2,10 +2,10 @@ package com.infosys.backend.security;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -49,8 +49,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (jwtConfig.isTokenValid(token)) {
                 String email = jwtConfig.extractEmail(token);
+                String role = jwtConfig.extractRole(token);
+                SimpleGrantedAuthority authority =
+                        new SimpleGrantedAuthority("ROLE_" + normalizeRole(role));
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
+                        new UsernamePasswordAuthenticationToken(email, null, java.util.List.of(authority));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
@@ -72,5 +75,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .filter(cookie -> "authToken".equals(cookie.getName()))
                 .map(Cookie::getValue)
                 .findFirst();
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return "USER";
+        }
+
+        return role.replace("ROLE_", "").toUpperCase();
     }
 }

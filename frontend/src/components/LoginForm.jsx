@@ -54,6 +54,7 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    const requestedPath = '/'
 
     if (!validateForm()) {
       return
@@ -77,7 +78,7 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
       onLoginSuccess({
         email: formData.email.trim(),
         ...result,
-      })
+      }, requestedPath)
     } catch (error) {
       setStatus({
         type: 'error',
@@ -125,9 +126,11 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
         <p className={`form-status ${status.type}`}>{status.message}</p>
       ) : null}
 
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? 'Signing in...' : 'Login'}
-      </button>
+      <div className="login-actions">
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Signing in...' : 'Login'}
+        </button>
+      </div>
 
       <p className="form-switch">
         Don&apos;t have an account?{' '}

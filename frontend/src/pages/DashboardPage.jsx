@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   addProduct,
   deleteProduct,
@@ -126,6 +127,29 @@ function DashboardPage({ user, onLogout }) {
     })
   }, [categoryFilter, products, searchTerm, stockFilter])
 
+  const inventorySummary = useMemo(() => {
+    const totalValue = products.reduce(
+      (sum, product) =>
+        sum + Number(product.price || 0) * Number(product.quantity || 0),
+      0,
+    )
+    const lowStockCount = products.filter((product) => {
+      const quantity = Number(product.quantity || 0)
+
+      return quantity > 0 && quantity <= 5
+    }).length
+    const outOfStockCount = products.filter(
+      (product) => Number(product.quantity || 0) === 0,
+    ).length
+
+    return {
+      categories: categories.length,
+      lowStockCount,
+      outOfStockCount,
+      totalValue,
+    }
+  }, [categories.length, products])
+
   const hasActiveFilters =
     searchTerm.trim() || categoryFilter !== 'all' || stockFilter !== 'all'
 
@@ -230,16 +254,42 @@ function DashboardPage({ user, onLogout }) {
     <main className="dashboard-page">
       <section className="dashboard-shell">
         <header className="dashboard-header">
-          <h1>Dashboard</h1>
-          <button type="button" className="dashboard-logout" onClick={onLogout}>
-            Logout
-          </button>
+          <div>
+            <p className="dashboard-eyebrow">Admin workspace</p>
+            <h1>Admin Panel</h1>
+          </div>
+          <nav className="admin-actions" aria-label="Admin navigation">
+            <Link to="/">View Store</Link>
+            <button type="button" className="dashboard-logout" onClick={onLogout}>
+              Logout
+            </button>
+          </nav>
         </header>
 
         <section className="dashboard-hero">
-          <p>Welcome back,</p>
-          <h2>{displayName}</h2>
-          <span>You have successfully logged in.</span>
+          <div>
+            <p>Welcome back,</p>
+            <h2>{displayName}</h2>
+            <span>Monitor inventory health and keep your product catalog current.</span>
+          </div>
+          <div className="dashboard-metrics" aria-label="Inventory summary">
+            <article>
+              <span>Total value</span>
+              <strong>{formatCurrency(inventorySummary.totalValue)}</strong>
+            </article>
+            <article>
+              <span>Categories</span>
+              <strong>{inventorySummary.categories}</strong>
+            </article>
+            <article>
+              <span>Low stock</span>
+              <strong>{inventorySummary.lowStockCount}</strong>
+            </article>
+            <article>
+              <span>Out of stock</span>
+              <strong>{inventorySummary.outOfStockCount}</strong>
+            </article>
+          </div>
         </section>
 
         <section className="product-panel" aria-labelledby="products-heading">

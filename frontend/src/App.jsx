@@ -7,7 +7,9 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
+import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import ProductDetailsPage from './pages/ProductDetailsPage'
 import RegisterPage from './pages/RegisterPage'
 import {
   logoutUser,
@@ -17,6 +19,36 @@ import './styles/register.css'
 
 const getUserFromSession = (sessionData) =>
   sessionData?.user || sessionData?.data?.user || sessionData?.data || sessionData
+
+const getUserRoles = (user) => {
+  const roleValues = [
+    user?.role,
+    user?.userRole,
+    user?.userType,
+    user?.accountType,
+    user?.data?.role,
+    user?.user?.role,
+  ]
+  const arrayRoles = [
+    ...(Array.isArray(user?.roles) ? user.roles : []),
+    ...(Array.isArray(user?.authorities) ? user.authorities : []),
+  ]
+
+  return [...roleValues, ...arrayRoles]
+    .map((role) => {
+      if (typeof role === 'string') {
+        return role
+      }
+
+      return role?.name || role?.role || role?.authority || ''
+    })
+    .filter(Boolean)
+    .map((role) => role.toLowerCase())
+}
+
+const isAdminUser = (user) =>
+  Boolean(user?.isAdmin || user?.admin || user?.data?.isAdmin || user?.user?.isAdmin) ||
+  getUserRoles(user).some((role) => role === 'admin' || role === 'role_admin')
 
 function AppRoutes() {
   const [currentUser, setCurrentUser] = useState(null)
@@ -55,9 +87,14 @@ function AppRoutes() {
     }
   }, [])
 
-  const handleLoginSuccess = (userData) => {
-    setCurrentUser(userData)
-    navigate('/dashboard', { replace: true })
+  const handleLoginSuccess = (userData, requestedPath = '/') => {
+    const nextUser = getUserFromSession(userData)
+
+    setCurrentUser(nextUser)
+    navigate(
+      requestedPath === '/dashboard' && isAdminUser(nextUser) ? '/dashboard' : '/',
+      { replace: true },
+    )
   }
 
   const handleLogout = async () => {
@@ -84,14 +121,22 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          <Navigate to={currentUser ? '/dashboard' : '/login'} replace />
+          currentUser ? (
+            <HomePage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route
         path="/login"
         element={
           currentUser ? (
-            <Navigate to="/dashboard" replace />
+            <Navigate to={isAdminUser(currentUser) ? '/dashboard' : '/'} replace />
           ) : (
             <LoginPage
               onLoginSuccess={handleLoginSuccess}
@@ -104,7 +149,7 @@ function AppRoutes() {
         path="/register"
         element={
           currentUser ? (
-            <Navigate to="/dashboard" replace />
+            <Navigate to={isAdminUser(currentUser) ? '/dashboard' : '/'} replace />
           ) : (
             <RegisterPage onSwitchToLogin={() => navigate('/login')} />
           )
@@ -113,8 +158,24 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          currentUser ? (
+          currentUser && isAdminUser(currentUser) ? (
             <DashboardPage user={currentUser} onLogout={handleLogout} />
+          ) : currentUser ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/product/:id"
+        element={
+          currentUser ? (
+            <ProductDetailsPage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              onLogout={handleLogout}
+            />
           ) : (
             <Navigate to="/login" replace />
           )

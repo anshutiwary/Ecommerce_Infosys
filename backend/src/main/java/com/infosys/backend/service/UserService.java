@@ -23,6 +23,7 @@ public class UserService {
 
     public User registerUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("USER");
         return userRepository.save(user);
     }
 
@@ -34,9 +35,9 @@ public class UserService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtConfig.generateToken(user.getEmail());
+        String token = jwtConfig.generateToken(user.getEmail(), user.getRole());
 
-        return new AuthResponse("Login successful", token, user.getEmail(), user.getName());
+        return new AuthResponse("Login successful", token, user.getEmail(), user.getName(), user.getRole());
     }
 
     public User getUserByEmail(String email) {
