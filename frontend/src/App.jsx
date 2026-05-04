@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   BrowserRouter,
   Navigate,
@@ -10,7 +10,9 @@ import DashboardPage from './pages/DashboardPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import ProductDetailsPage from './pages/ProductDetailsPage'
+import CartPage from './pages/CartPage'
 import RegisterPage from './pages/RegisterPage'
+import { getCart } from './services/cartService'
 import {
   logoutUser,
   verifyStoredSession,
@@ -53,7 +55,17 @@ const isAdminUser = (user) =>
 function AppRoutes() {
   const [currentUser, setCurrentUser] = useState(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [cartCount, setCartCount] = useState(0)
   const navigate = useNavigate()
+
+  const loadCartCount = useCallback(async () => {
+    try {
+      const cartItems = await getCart()
+      setCartCount(Array.isArray(cartItems) ? cartItems.length : 0)
+    } catch {
+      setCartCount(0)
+    }
+  }, [setCartCount])
 
   useEffect(() => {
     let isMounted = true
@@ -67,12 +79,14 @@ function AppRoutes() {
         }
 
         setCurrentUser(getUserFromSession(sessionUser))
+        await loadCartCount()
       } catch {
         if (!isMounted) {
           return
         }
 
         setCurrentUser(null)
+        setCartCount(0)
       } finally {
         if (isMounted) {
           setIsCheckingSession(false)
@@ -85,12 +99,13 @@ function AppRoutes() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [loadCartCount])
 
-  const handleLoginSuccess = (userData, requestedPath = '/') => {
+  const handleLoginSuccess = async (userData, requestedPath = '/') => {
     const nextUser = getUserFromSession(userData)
 
     setCurrentUser(nextUser)
+    await loadCartCount()
     navigate(
       requestedPath === '/dashboard' && isAdminUser(nextUser) ? '/dashboard' : '/',
       { replace: true },
@@ -100,6 +115,7 @@ function AppRoutes() {
   const handleLogout = async () => {
     await logoutUser()
     setCurrentUser(null)
+    setCartCount(0)
     navigate('/login', { replace: true })
   }
 
@@ -125,6 +141,7 @@ function AppRoutes() {
             <HomePage
               currentUser={currentUser}
               isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
               onLogout={handleLogout}
             />
           ) : (
@@ -174,6 +191,24 @@ function AppRoutes() {
             <ProductDetailsPage
               currentUser={currentUser}
               isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
+              refreshCartCount={loadCartCount}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/cart"
+        element={
+          currentUser ? (
+            <CartPage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
+              refreshCartCount={loadCartCount}
               onLogout={handleLogout}
             />
           ) : (

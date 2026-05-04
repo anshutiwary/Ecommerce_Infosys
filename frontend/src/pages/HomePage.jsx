@@ -19,7 +19,7 @@ const sortOptions = [
   { label: 'Newest First', value: 'newest' },
 ]
 
-function HomePage({ isAdmin, onLogout }) {
+function HomePage({ isAdmin, cartCount, onLogout }) {
   const [products, setProducts] = useState([])
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [productError, setProductError] = useState('')
@@ -168,6 +168,9 @@ function HomePage({ isAdmin, onLogout }) {
         </label>
         <nav className="store-nav" aria-label="Primary navigation">
           {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+          <Link to="/cart" className="cart-link">
+            Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+          </Link>
           <button type="button" onClick={onLogout}>
             Logout
           </button>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getProducts } from '../services/productService'
+import { addToCart } from '../services/cartService'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -12,11 +13,13 @@ const formatCurrency = (value) =>
 const getProductId = (product) =>
   product.productId || product.id || product._id || product.name
 
-function ProductDetailsPage({ isAdmin, onLogout }) {
+function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
   const { id } = useParams()
   const [product, setProduct] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [cartStatus, setCartStatus] = useState({ type: '', message: '' })
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -65,6 +68,9 @@ function ProductDetailsPage({ isAdmin, onLogout }) {
           </Link>
           <nav className="store-nav" aria-label="Primary navigation">
             {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+            <Link to="/cart" className="cart-link">
+              Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+            </Link>
             <button type="button" onClick={onLogout}>
               Logout
             </button>
@@ -86,6 +92,9 @@ function ProductDetailsPage({ isAdmin, onLogout }) {
           </Link>
           <nav className="store-nav" aria-label="Primary navigation">
             {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+            <Link to="/cart" className="cart-link">
+              Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+            </Link>
             <button type="button" onClick={onLogout}>
               Logout
             </button>
@@ -106,6 +115,30 @@ function ProductDetailsPage({ isAdmin, onLogout }) {
 
   const quantity = Number(product.quantity || 0)
 
+  const handleAddToCart = async () => {
+    if (!product) {
+      return
+    }
+
+    setIsAddingToCart(true)
+    setCartStatus({ type: '', message: '' })
+
+    try {
+      await addToCart(Number(getProductId(product)), 1)
+      setCartStatus({ type: 'success', message: 'Added to cart.' })
+      if (typeof refreshCartCount === 'function') {
+        await refreshCartCount()
+      }
+    } catch (addError) {
+      setCartStatus({
+        type: 'error',
+        message: addError.message || 'Unable to add product to cart.',
+      })
+    } finally {
+      setIsAddingToCart(false)
+    }
+  }
+
   return (
     <main className="product-details-page">
       <header className="store-header">
@@ -114,6 +147,9 @@ function ProductDetailsPage({ isAdmin, onLogout }) {
         </Link>
         <nav className="store-nav" aria-label="Primary navigation">
           {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+          <Link to="/cart" className="cart-link">
+            Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+          </Link>
           <button type="button" onClick={onLogout}>
             Logout
           </button>
@@ -169,14 +205,18 @@ function ProductDetailsPage({ isAdmin, onLogout }) {
               <button
                 type="button"
                 className="add-to-cart-btn"
-                disabled={quantity === 0}
+                disabled={quantity === 0 || isAddingToCart}
+                onClick={handleAddToCart}
               >
-                {quantity > 0 ? 'Add to Cart' : 'Unavailable'}
+                {isAddingToCart ? 'Adding...' : quantity > 0 ? 'Add to Cart' : 'Unavailable'}
               </button>
               <button type="button" className="wishlist-btn">
                 Add to Wishlist
               </button>
             </div>
+            {cartStatus.message ? (
+              <p className={`form-status ${cartStatus.type}`}>{cartStatus.message}</p>
+            ) : null}
           </div>
         </div>
 
