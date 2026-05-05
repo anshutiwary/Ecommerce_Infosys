@@ -104,6 +104,8 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
           placeholder="john@example.com"
           value={formData.email}
           onChange={handleChange}
+          aria-label="Email address"
+          required
         />
         {errors.email ? <small className="field-error">{errors.email}</small> : null}
       </label>
@@ -113,9 +115,11 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
         <input
           type="password"
           name="password"
-          placeholder="Enter your password"
+          placeholder="••••••••"
           value={formData.password}
           onChange={handleChange}
+          aria-label="Password"
+          required
         />
         {errors.password ? (
           <small className="field-error">{errors.password}</small>
@@ -123,7 +127,9 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
       </label>
 
       {status.message ? (
-        <p className={`form-status ${status.type}`}>{status.message}</p>
+        <p className={`form-status ${status.type}`}>
+          {status.message}
+        </p>
       ) : null}
 
       <div className="login-actions">

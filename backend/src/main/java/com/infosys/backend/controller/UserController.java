@@ -17,6 +17,8 @@ import com.infosys.backend.dto.LoginRequest;
 import com.infosys.backend.model.User;
 import com.infosys.backend.service.UserService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -34,7 +36,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         try {
             AuthResponse authResponse = userService.authenticateUser(
                     loginRequest.getEmail(),
@@ -50,7 +52,7 @@ public class UserController {
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, authCookie.toString())
-                    .body(authResponse);
+                    .body(toLoginResponse(authResponse, shouldExposeToken(request)));
         } catch (RuntimeException ex) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -117,5 +119,26 @@ public class UserController {
         response.put("role", user.getRole());
 
         return response;
+    }
+
+    private Map<String, Object> toLoginResponse(AuthResponse authResponse, boolean exposeToken) {
+        Map<String, Object> response = new LinkedHashMap<>();
+
+        response.put("message", authResponse.getMessage());
+        response.put("email", authResponse.getEmail());
+        response.put("name", authResponse.getName());
+        response.put("role", authResponse.getRole());
+
+        if (exposeToken) {
+            response.put("accessToken", authResponse.getToken());
+        }
+
+        return response;
+    }
+
+    private boolean shouldExposeToken(HttpServletRequest request) {
+        String userAgent = request.getHeader(HttpHeaders.USER_AGENT);
+
+        return userAgent != null && userAgent.contains("PostmanRuntime");
     }
 }

@@ -146,11 +146,11 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
           ProductHub
         </Link>
         <nav className="store-nav" aria-label="Primary navigation">
-          {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+          {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
           </Link>
-          <button type="button" onClick={onLogout}>
+          <button type="button" onClick={onLogout} aria-label="Logout">
             Logout
           </button>
         </nav>
@@ -158,9 +158,9 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
 
       <div className="product-details-container">
         <nav className="breadcrumb">
-          <Link to="/">Home</Link>
+          <Link to="/">🏠 Home</Link>
           <span>/</span>
-          <Link to="/">Products</Link>
+          <Link to="/">📦 Products</Link>
           <span>/</span>
           <span>{product.name || 'Product Details'}</span>
         </nav>
@@ -183,19 +183,16 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
           <div className="product-info">
             <div className="product-header">
               <span className="product-category">
-                {product.category || 'Uncategorized'}
+                📂 {product.category || 'Uncategorized'}
               </span>
               <h1>{product.name || 'Untitled product'}</h1>
               <div className="product-price-section">
-                <strong className="product-price">{formatCurrency(product.price)}</strong>
-                <span className={`stock-status ${quantity > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                  {quantity > 0 ? `${quantity} in stock` : 'Out of stock'}
-                </span>
+                <strong className="product-price">💰 {formatCurrency(product.price)}</strong>
               </div>
             </div>
 
             <div className="product-description-section">
-              <h2>Description</h2>
+              <h2>📝 Description</h2>
               <p className="product-description">
                 {product.description || 'No description available for this product.'}
               </p>
@@ -208,14 +205,16 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
                 disabled={quantity === 0 || isAddingToCart}
                 onClick={handleAddToCart}
               >
-                {isAddingToCart ? 'Adding...' : quantity > 0 ? 'Add to Cart' : 'Unavailable'}
+                {isAddingToCart ? '⏳ Adding...' : quantity > 0 ? '🛒 Add to Cart' : 'Unavailable'}
               </button>
               <button type="button" className="wishlist-btn">
-                Add to Wishlist
+                ❤️ Add to Wishlist
               </button>
             </div>
             {cartStatus.message ? (
-              <p className={`form-status ${cartStatus.type}`}>{cartStatus.message}</p>
+              <p className={`form-status ${cartStatus.type}`}>
+                {cartStatus.type === 'success' ? '✅' : '❌'} {cartStatus.message}
+              </p>
             ) : null}
           </div>
         </div>
@@ -234,10 +233,6 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
             <div className="spec-item">
               <span className="spec-label">Price</span>
               <span className="spec-value">{formatCurrency(product.price)}</span>
-            </div>
-            <div className="spec-item">
-              <span className="spec-label">Stock Quantity</span>
-              <span className="spec-value">{quantity}</span>
             </div>
             {product.brand && (
               <div className="spec-item">

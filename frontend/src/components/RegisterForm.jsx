@@ -118,9 +118,11 @@ function RegisterForm({ onSwitchToLogin }) {
         <span>Full Name</span>
         <input
           name="name"
-          placeholder="Enter your full name"
+          placeholder="John Doe"
           value={formData.name}
           onChange={handleChange}
+          aria-label="Full name"
+          required
         />
         {errors.name ? <small className="field-error">{errors.name}</small> : null}
       </label>
@@ -133,6 +135,8 @@ function RegisterForm({ onSwitchToLogin }) {
           placeholder="john@example.com"
           value={formData.email}
           onChange={handleChange}
+          aria-label="Email address"
+          required
         />
         {errors.email ? <small className="field-error">{errors.email}</small> : null}
       </label>
@@ -146,6 +150,8 @@ function RegisterForm({ onSwitchToLogin }) {
           placeholder="9876543210"
           value={formData.phone}
           onChange={handleChange}
+          aria-label="Phone number"
+          required
         />
         {errors.phone ? <small className="field-error">{errors.phone}</small> : null}
       </label>
@@ -155,9 +161,11 @@ function RegisterForm({ onSwitchToLogin }) {
         <input
           type="password"
           name="password"
-          placeholder="Create a strong password"
+          placeholder="••••••••"
           value={formData.password}
           onChange={handleChange}
+          aria-label="Password"
+          required
         />
         {errors.password ? (
           <small className="field-error">{errors.password}</small>
@@ -169,9 +177,11 @@ function RegisterForm({ onSwitchToLogin }) {
         <input
           type="password"
           name="confirmPassword"
-          placeholder="Re-enter your password"
+          placeholder="••••••••"
           value={formData.confirmPassword}
           onChange={handleChange}
+          aria-label="Confirm password"
+          required
         />
         {errors.confirmPassword ? (
           <small className="field-error">{errors.confirmPassword}</small>
@@ -179,7 +189,9 @@ function RegisterForm({ onSwitchToLogin }) {
       </label>
 
       {status.message ? (
-        <p className={`form-status ${status.type}`}>{status.message}</p>
+        <p className={`form-status ${status.type}`}>
+          {status.message}
+        </p>
       ) : null}
 
       <button type="submit" disabled={isSubmitting}>

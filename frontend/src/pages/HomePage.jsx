@@ -25,7 +25,6 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
   const [productError, setProductError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
-  const [availabilityFilter, setAvailabilityFilter] = useState('all')
   const [maxPrice, setMaxPrice] = useState('')
   const [sortBy, setSortBy] = useState('featured')
 
@@ -95,17 +94,11 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
       const matchesCategory =
         categoryFilter === 'all' || productCategory === categoryFilter
 
-      const matchesAvailability =
-        availabilityFilter === 'all' ||
-        (availabilityFilter === 'in-stock' && productQuantity > 0) ||
-        (availabilityFilter === 'out-of-stock' && productQuantity === 0)
-
       const matchesPrice = !priceLimit || productPrice <= priceLimit
 
       return (
         matchesSearch &&
         matchesCategory &&
-        matchesAvailability &&
         matchesPrice
       )
     })
@@ -128,7 +121,6 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
       return 0
     })
   }, [
-    availabilityFilter,
     categoryFilter,
     maxPrice,
     products,
@@ -139,14 +131,12 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
   const hasActiveFilters =
     searchTerm.trim() ||
     categoryFilter !== 'all' ||
-    availabilityFilter !== 'all' ||
     maxPrice ||
     sortBy !== 'featured'
 
   const clearFilters = () => {
     setSearchTerm('')
     setCategoryFilter('all')
-    setAvailabilityFilter('all')
     setMaxPrice('')
     setSortBy('featured')
   }
@@ -158,20 +148,20 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
           ProductHub
         </Link>
         <label className="store-search">
-          <span>Search products</span>
           <input
             type="search"
-            placeholder="Search for products, categories, and more"
+            placeholder="🔍 Search products..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
+            aria-label="Search products"
           />
         </label>
         <nav className="store-nav" aria-label="Primary navigation">
-          {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+          {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
           </Link>
-          <button type="button" onClick={onLogout}>
+          <button type="button" onClick={onLogout} aria-label="Logout">
             Logout
           </button>
         </nav>
@@ -179,11 +169,10 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
 
       <section className="store-hero">
         <div>
-          <p>Today&apos;s selection</p>
-          <h1>Discover products for every requirement.</h1>
+          <p>✨ Today's selection</p>
+          <h1>🎯 Discover products for every requirement.</h1>
           <span>
-            Browse the catalog with fast search, practical filters, and clear
-            stock visibility.
+            Browse the catalog with fast search and practical filters.
           </span>
         </div>
       </section>
@@ -196,6 +185,7 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
               type="button"
               className={categoryFilter === category ? 'active' : ''}
               onClick={() => setCategoryFilter(category)}
+              title={`Filter by ${category}`}
             >
               {category}
             </button>
@@ -206,17 +196,18 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
       <section className="store-layout" aria-labelledby="catalog-heading">
         <aside className="store-sidebar" aria-label="Product filters">
           <div className="store-filter-header">
-            <h2>Filters</h2>
+            <h2>🎚️ Filters</h2>
             <button type="button" onClick={clearFilters} disabled={!hasActiveFilters}>
               Clear
             </button>
           </div>
 
           <label>
-            <span>Category</span>
+            <span>📁 Category</span>
             <select
               value={categoryFilter}
               onChange={(event) => setCategoryFilter(event.target.value)}
+              aria-label="Filter by category"
             >
               <option value="all">All categories</option>
               {categories.map((category) => (
@@ -228,25 +219,14 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
           </label>
 
           <label>
-            <span>Availability</span>
-            <select
-              value={availabilityFilter}
-              onChange={(event) => setAvailabilityFilter(event.target.value)}
-            >
-              <option value="all">All products</option>
-              <option value="in-stock">In stock</option>
-              <option value="out-of-stock">Out of stock</option>
-            </select>
-          </label>
-
-          <label>
-            <span>Max price</span>
+            <span> Max price</span>
             <input
               type="number"
               min="0"
               placeholder="5000"
               value={maxPrice}
               onChange={(event) => setMaxPrice(event.target.value)}
+              aria-label="Filter by max price"
             />
           </label>
         </aside>
@@ -254,7 +234,7 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
         <section className="store-catalog">
           <div className="catalog-toolbar">
             <div>
-              <h2 id="catalog-heading">Product Listing</h2>
+              <h2 id="catalog-heading">📦 Product Listing</h2>
               <p>
                 Showing {filteredProducts.length} of {products.length} products
               </p>
@@ -264,6 +244,7 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
               <select
                 value={sortBy}
                 onChange={(event) => setSortBy(event.target.value)}
+                aria-label="Sort products"
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -275,9 +256,9 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
           </div>
 
           {isLoadingProducts ? (
-            <p className="product-message">Loading products...</p>
+            <p className="product-message">⏳ Loading products...</p>
           ) : productError ? (
-            <p className="product-message error">{productError}</p>
+            <p className="product-message error">❌ {productError}</p>
           ) : filteredProducts.length ? (
             <div className="store-grid">
               {filteredProducts.map((product) => {
@@ -301,19 +282,13 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
                         {product.description || 'No description available.'}
                       </p>
                       <strong>{formatCurrency(product.price)}</strong>
-                      <span className={quantity > 0 ? 'stock-badge' : 'stock-badge out'}>
-                        {quantity > 0 ? `${quantity} in stock` : 'Out of stock'}
-                      </span>
-                      {quantity > 0 ? (
-                        <Link 
-                          to={`/product/${getProductId(product)}`}
-                          className="view-details-link"
-                        >
-                          View Details
-                        </Link>
-                      ) : (
-                        <span className="unavailable-text">Unavailable</span>
-                      )}
+                      <Link 
+                        to={`/product/${getProductId(product)}`}
+                        className="view-details-link"
+                        title="View product details"
+                      >
+                        View Details
+                      </Link>
                     </div>
                   </article>
                 )
@@ -321,7 +296,7 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
             </div>
           ) : (
             <p className="product-message">
-              No products match your search and filters.
+              🔍 No products match your search and filters.
             </p>
           )}
         </section>
