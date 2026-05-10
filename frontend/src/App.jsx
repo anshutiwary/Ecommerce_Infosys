@@ -11,6 +11,8 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import ProductDetailsPage from './pages/ProductDetailsPage'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import MyOrdersPage from './pages/MyOrdersPage'
 import RegisterPage from './pages/RegisterPage'
 import { getCart } from './services/cartService'
 import {
@@ -209,6 +211,37 @@ function AppRoutes() {
               isAdmin={isAdminUser(currentUser)}
               cartCount={cartCount}
               refreshCartCount={loadCartCount}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          currentUser ? (
+            <CheckoutPage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
+              refreshCartCount={loadCartCount}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          currentUser ? (
+            <MyOrdersPage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
               onLogout={handleLogout}
             />
           ) : (

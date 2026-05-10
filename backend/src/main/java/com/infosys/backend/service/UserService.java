@@ -44,4 +44,9 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    public User getUserById(int userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Invalid user"));
+    }
 }

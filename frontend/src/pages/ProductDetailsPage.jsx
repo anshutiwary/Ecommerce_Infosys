@@ -68,6 +68,7 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
           </Link>
           <nav className="store-nav" aria-label="Primary navigation">
             {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+            <Link to="/orders">My Orders</Link>
             <Link to="/cart" className="cart-link">
               Cart{cartCount > 0 ? ` (${cartCount})` : ''}
             </Link>
@@ -92,6 +93,7 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
           </Link>
           <nav className="store-nav" aria-label="Primary navigation">
             {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+            <Link to="/orders">My Orders</Link>
             <Link to="/cart" className="cart-link">
               Cart{cartCount > 0 ? ` (${cartCount})` : ''}
             </Link>
@@ -147,6 +149,7 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
         </Link>
         <nav className="store-nav" aria-label="Primary navigation">
           {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
+          <Link to="/orders">My Orders</Link>
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
           </Link>

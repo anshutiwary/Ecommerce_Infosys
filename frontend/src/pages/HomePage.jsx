@@ -81,7 +81,6 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
       const productName = product.name || ''
       const productDescription = product.description || ''
       const productCategory = product.category || ''
-      const productQuantity = Number(product.quantity || 0)
       const productPrice = Number(product.price || 0)
 
       const matchesSearch =
@@ -158,6 +157,7 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
         </label>
         <nav className="store-nav" aria-label="Primary navigation">
           {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
+          <Link to="/orders">My Orders</Link>
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
           </Link>
@@ -262,8 +262,6 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
           ) : filteredProducts.length ? (
             <div className="store-grid">
               {filteredProducts.map((product) => {
-                const quantity = Number(product.quantity || 0)
-
                 return (
                   <article className="store-card" key={getProductId(product)}>
                     {product.imageUrl ? (

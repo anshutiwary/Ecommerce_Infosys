@@ -140,6 +140,7 @@ function CartPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
         </Link>
         <nav className="store-nav" aria-label="Primary navigation">
           {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
+          <Link to="/orders">My Orders</Link>
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
           </Link>
@@ -256,7 +257,12 @@ function CartPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
                 <p>Cart subtotal</p>
                 <strong>{formatCurrency(cartTotal)}</strong>
               </div>
-              <p>{cartItems.length} item{cartItems.length === 1 ? '' : 's'} in cart</p>
+              <div className="cart-summary-actions">
+                <p>{cartItems.length} item{cartItems.length === 1 ? '' : 's'} in cart</p>
+                <Link to="/checkout" className="checkout-link">
+                  Proceed to checkout
+                </Link>
+              </div>
             </section>
           </>
         )}

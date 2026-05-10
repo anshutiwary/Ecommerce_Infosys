@@ -6,6 +6,10 @@ import {
   getProducts,
   updateProduct,
 } from '../services/productService'
+import {
+  approveOrder,
+  getAdminOrders,
+} from '../services/adminOrderService'
 
 const stockFilterOptions = [
   { label: 'All stock', value: 'all' },
@@ -20,6 +24,17 @@ const formatCurrency = (value) =>
     currency: 'INR',
     maximumFractionDigits: 2,
   }).format(Number(value || 0))
+
+const formatOrderDate = (value) => {
+  if (!value) {
+    return 'Date unavailable'
+  }
+
+  return new Intl.DateTimeFormat('en-IN', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
+}
 
 const getProductId = (product) =>
   product.productId || product.id || product._id || product.name
@@ -52,6 +67,11 @@ function DashboardPage({ user, onLogout }) {
   const [editingProductId, setEditingProductId] = useState(null)
   const [isSavingProduct, setIsSavingProduct] = useState(false)
   const [deletingProductId, setDeletingProductId] = useState(null)
+  const [orders, setOrders] = useState([])
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true)
+  const [orderError, setOrderError] = useState('')
+  const [orderStatus, setOrderStatus] = useState('')
+  const [approvingOrderId, setApprovingOrderId] = useState(null)
 
   useEffect(() => {
     let isMounted = true
@@ -78,6 +98,37 @@ function DashboardPage({ user, onLogout }) {
     }
 
     loadProducts()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadOrders = async () => {
+      setIsLoadingOrders(true)
+      setOrderError('')
+
+      try {
+        const orderList = await getAdminOrders()
+
+        if (isMounted) {
+          setOrders(orderList)
+        }
+      } catch (error) {
+        if (isMounted) {
+          setOrderError(error.message || 'Unable to load orders.')
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingOrders(false)
+        }
+      }
+    }
+
+    loadOrders()
 
     return () => {
       isMounted = false
@@ -149,6 +200,17 @@ function DashboardPage({ user, onLogout }) {
       totalValue,
     }
   }, [categories.length, products])
+
+  const orderSummary = useMemo(() => {
+    const pendingCount = orders.filter((order) => order.orderStatus === 'PENDING').length
+    const approvedCount = orders.filter((order) => order.orderStatus === 'APPROVED').length
+
+    return {
+      approvedCount,
+      pendingCount,
+      totalOrders: orders.length,
+    }
+  }, [orders])
 
   const hasActiveFilters =
     searchTerm.trim() || categoryFilter !== 'all' || stockFilter !== 'all'
@@ -250,6 +312,27 @@ function DashboardPage({ user, onLogout }) {
     }
   }
 
+  const handleApproveOrder = async (orderId) => {
+    setApprovingOrderId(orderId)
+    setOrderError('')
+    setOrderStatus('')
+
+    try {
+      const updatedOrder = await approveOrder(orderId)
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.orderId === orderId ? updatedOrder : order,
+        ),
+      )
+      setOrderStatus(`Order #${orderId} approved successfully.`)
+    } catch (error) {
+      setOrderError(error.message || 'Unable to approve order.')
+    } finally {
+      setApprovingOrderId(null)
+    }
+  }
+
   return (
     <main className="dashboard-page">
       <section className="dashboard-shell">
@@ -289,7 +372,89 @@ function DashboardPage({ user, onLogout }) {
               <span>Out of stock</span>
               <strong>{inventorySummary.outOfStockCount}</strong>
             </article>
+            <article>
+              <span>Pending orders</span>
+              <strong>{orderSummary.pendingCount}</strong>
+            </article>
           </div>
+        </section>
+
+        <section className="product-panel" aria-labelledby="orders-heading">
+          <div className="product-panel-header">
+            <div>
+              <h2 id="orders-heading">Order approvals</h2>
+              <p>
+                {orderSummary.pendingCount} pending of {orderSummary.totalOrders} orders
+              </p>
+            </div>
+            <span className="approved-count">
+              {orderSummary.approvedCount} approved
+            </span>
+          </div>
+
+          {orderStatus ? (
+            <p className="product-message success">{orderStatus}</p>
+          ) : null}
+
+          {isLoadingOrders ? (
+            <p className="product-message">Loading orders...</p>
+          ) : orderError ? (
+            <p className="product-message error">{orderError}</p>
+          ) : orders.length ? (
+            <div className="admin-orders-list">
+              {orders.map((order) => (
+                <article className="admin-order-card" key={order.orderId}>
+                  <div className="admin-order-header">
+                    <div>
+                      <p>Order #{order.orderId}</p>
+                      <h3>{formatOrderDate(order.orderedAt)}</h3>
+                    </div>
+                    <span className={`order-status ${String(order.orderStatus || '').toLowerCase()}`}>
+                      {order.orderStatus || 'PENDING'}
+                    </span>
+                  </div>
+
+                  <div className="order-summary-meta">
+                    <div>
+                      <span>Total amount</span>
+                      <strong>{formatCurrency(order.totalPrice)}</strong>
+                    </div>
+                    <div>
+                      <span>Shipping address</span>
+                      <strong>{order.shippingAddress || 'Not provided'}</strong>
+                    </div>
+                  </div>
+
+                  <div className="checkout-item-list">
+                    {(Array.isArray(order.items) ? order.items : []).map((item) => (
+                      <article className="checkout-item" key={item.orderItemId || item.productId}>
+                        <div>
+                          <h3>{item.productName || 'Product'}</h3>
+                          <p>Quantity: {item.quantity}</p>
+                        </div>
+                        <div className="checkout-item-money">
+                          <span>{formatCurrency(item.unitPrice)} each</span>
+                          <strong>{formatCurrency(item.subtotal)}</strong>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="admin-order-actions">
+                    <button
+                      type="button"
+                      onClick={() => handleApproveOrder(order.orderId)}
+                      disabled={order.orderStatus !== 'PENDING' || approvingOrderId === order.orderId}
+                    >
+                      {approvingOrderId === order.orderId ? 'Approving...' : 'Approve order'}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="product-message">No orders have been placed yet.</p>
+          )}
         </section>
 
         <section className="product-panel" aria-labelledby="products-heading">

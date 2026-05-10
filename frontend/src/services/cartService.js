@@ -1,77 +1,67 @@
+import axios from 'axios'
+
 const CART_API_BASE_URL = '/api/cart'
 
-async function parseJsonResponse(response) {
-  try {
-    return await response.json()
-  } catch {
-    return null
-  }
+function getApiErrorMessage(error, fallbackMessage) {
+  return error.response?.data?.message || error.message || fallbackMessage
 }
 
 export async function getCart() {
-  const response = await fetch(CART_API_BASE_URL, {
-    method: 'GET',
-    credentials: 'include',
-  })
+  try {
+    const response = await axios.get(CART_API_BASE_URL, {
+      withCredentials: true,
+    })
 
-  const data = await parseJsonResponse(response)
-
-  if (!response.ok) {
-    throw new Error(data?.message || 'Unable to load cart.')
+    return Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to load cart.'))
   }
-
-  return Array.isArray(data) ? data : []
 }
 
 export async function addToCart(productId, quantity = 1) {
-  const response = await fetch(CART_API_BASE_URL, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ productId, quantity }),
-  })
+  try {
+    const response = await axios.post(
+      CART_API_BASE_URL,
+      { productId, quantity },
+      { withCredentials: true },
+    )
 
-  const data = await parseJsonResponse(response)
-
-  if (!response.ok) {
-    throw new Error(data?.message || 'Unable to add item to cart.')
+    return response.data
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to add item to cart.'))
   }
-
-  return data
 }
 
 export async function updateCartQuantity(productId, quantity) {
-  const response = await fetch(`${CART_API_BASE_URL}/${encodeURIComponent(productId)}`, {
-    method: 'PUT',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(quantity),
-  })
+  try {
+    const response = await axios.put(
+      `${CART_API_BASE_URL}/${encodeURIComponent(productId)}`,
+      quantity,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+      },
+    )
 
-  const data = await parseJsonResponse(response)
-
-  if (!response.ok) {
-    throw new Error(data?.message || 'Unable to update cart item quantity.')
+    return response.data
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to update cart item quantity.'))
   }
-
-  return data
 }
 
 export async function removeFromCart(productId) {
-  const response = await fetch(`${CART_API_BASE_URL}/${encodeURIComponent(productId)}`, {
-    method: 'DELETE',
-    credentials: 'include',
-  })
+  try {
+    const response = await axios.delete(
+      `${CART_API_BASE_URL}/${encodeURIComponent(productId)}`,
+      {
+        withCredentials: true,
+      },
+    )
 
-  const data = await parseJsonResponse(response)
-
-  if (!response.ok) {
-    throw new Error(data?.message || 'Unable to remove item from cart.')
+    return response.data
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to remove item from cart.'))
   }
-
-  return data
 }
