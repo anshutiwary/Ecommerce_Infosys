@@ -6,11 +6,11 @@ function getApiErrorMessage(error, fallbackMessage) {
   return error.response?.data?.message || error.message || fallbackMessage
 }
 
-export async function checkoutCart(shippingAddress = '') {
+export async function checkoutCart(shippingAddress = '', paymentMethod = '') {
   try {
     const response = await axios.post(
       CHECKOUT_API_URL,
-      { shippingAddress },
+      { shippingAddress, paymentMethod },
       { withCredentials: true },
     )
 

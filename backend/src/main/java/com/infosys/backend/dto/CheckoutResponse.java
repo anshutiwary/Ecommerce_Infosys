@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.infosys.backend.model.OrderStatus;
+import com.infosys.backend.model.PaymentMethod;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,9 +20,11 @@ public class CheckoutResponse {
 
     private String message;
     private int orderId;
+    private String orderNumber;
     private int userId;
-    private BigDecimal totalPrice;
+    private BigDecimal totalAmount;
     private OrderStatus orderStatus;
+    private PaymentMethod paymentMethod;
     private String shippingAddress;
     private Instant orderedAt;
     private List<CheckoutItemResponse> items;

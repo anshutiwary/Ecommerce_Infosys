@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getCart } from '../services/cartService'
 import { checkoutCart } from '../services/checkoutService'
 
@@ -13,18 +13,22 @@ const formatCurrency = (value) =>
 const getProductId = (product) =>
   product.productId || product.id || product._id || product.name
 
-function normalizeOrderItems(order) {
-  return Array.isArray(order?.items) ? order.items : []
-}
+const paymentOptions = [
+  'Credit Card',
+  'Debit Card',
+  'UPI',
+  'Cash on Delivery',
+]
 
 function CheckoutPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
   const [cartItems, setCartItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [shippingAddress, setShippingAddress] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('')
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
-  const [orderSummary, setOrderSummary] = useState(null)
+
+  const navigate = useNavigate()
 
   const loadCart = async () => {
     setIsLoading(true)
@@ -89,22 +93,18 @@ function CheckoutPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
   const handleCheckout = async () => {
     setIsCheckingOut(true)
     setError('')
-    setSuccessMessage('')
-    setOrderSummary(null)
 
     try {
-      const order = await checkoutCart(shippingAddress.trim())
-      setOrderSummary(order)
-      setSuccessMessage(order?.message || 'Checkout completed successfully.')
+      const order = await checkoutCart(shippingAddress.trim(), paymentMethod)
       await loadCart()
+      setCartItems([])
+      navigate('/order-confirmation', { state: { order } })
     } catch (checkoutError) {
       setError(checkoutError.message || 'Unable to complete checkout.')
     } finally {
       setIsCheckingOut(false)
     }
   }
-
-  const orderItems = normalizeOrderItems(orderSummary)
 
   return (
     <main className="checkout-page">
@@ -146,9 +146,6 @@ function CheckoutPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
               </div>
 
               {error ? <p className="product-message error">{error}</p> : null}
-              {successMessage ? (
-                <p className="product-message success">{successMessage}</p>
-              ) : null}
 
               {!cartItems.length ? (
                 <div className="checkout-empty-state">
@@ -197,6 +194,21 @@ function CheckoutPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
                 />
               </label>
 
+              <label className="payment-method-field">
+                Payment method
+                <select
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                >
+                  <option value="">Select payment method</option>
+                  {paymentOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
               <div className="checkout-total-row">
                 <span>Total amount</span>
                 <strong>{formatCurrency(cartTotal)}</strong>
@@ -206,51 +218,14 @@ function CheckoutPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
                 type="button"
                 className="checkout-button"
                 onClick={handleCheckout}
-                disabled={!cartItems.length || isCheckingOut}
+                disabled={!cartItems.length || !shippingAddress.trim() || !paymentMethod || isCheckingOut}
               >
-                {isCheckingOut ? 'Placing order...' : 'Checkout'}
+                {isCheckingOut ? 'Placing order...' : 'Place order'}
               </button>
             </aside>
           </div>
         )}
 
-        {orderSummary ? (
-          <section className="order-summary-panel">
-            <div className="checkout-section-heading">
-              <div>
-                <p>Order #{orderSummary.orderId}</p>
-                <h2>Order summary</h2>
-              </div>
-              <span>{orderSummary.orderStatus || 'PENDING'}</span>
-            </div>
-
-            <div className="order-summary-meta">
-              <div>
-                <span>Total paid</span>
-                <strong>{formatCurrency(orderSummary.totalPrice)}</strong>
-              </div>
-              <div>
-                <span>Shipping address</span>
-                <strong>{orderSummary.shippingAddress || 'Not provided'}</strong>
-              </div>
-            </div>
-
-            <div className="checkout-item-list">
-              {orderItems.map((item) => (
-                <article className="checkout-item" key={item.orderItemId || item.productId}>
-                  <div>
-                    <h3>{item.productName || 'Product'}</h3>
-                    <p>Quantity: {item.quantity}</p>
-                  </div>
-                  <div className="checkout-item-money">
-                    <span>{formatCurrency(item.unitPrice)} each</span>
-                    <strong>{formatCurrency(item.subtotal)}</strong>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        ) : null}
       </div>
     </main>
   )

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -42,6 +43,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int orderId;
 
+    @Column(nullable = false, unique = true, updatable = false, length = 40)
+    private String orderNumber;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnoreProperties({"orders", "cartItems", "password", "hibernateLazyInitializer", "handler"})
@@ -60,6 +64,10 @@ public class Order {
     @Column(nullable = false, length = 20)
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private PaymentMethod paymentMethod;
+
     @Column(nullable = false)
     private String shippingAddress;
 
@@ -72,6 +80,9 @@ public class Order {
     @PrePersist
     public void prePersist() {
         Instant now = Instant.now();
+        if (this.orderNumber == null || this.orderNumber.isBlank()) {
+            this.orderNumber = "ORD-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+        }
         if (this.orderedAt == null) {
             this.orderedAt = now;
         }
