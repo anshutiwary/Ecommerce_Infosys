@@ -7,9 +7,10 @@ import {
   updateProduct,
 } from '../services/productService'
 import {
-  approveOrder,
   getAdminOrders,
 } from '../services/adminOrderService'
+import { getProductImageUrl } from '../utils/productImages'
+import { getOrderStatus, getOrderStatusClass, getOrderStatusLabel } from '../utils/orderStatus'
 
 const stockFilterOptions = [
   { label: 'All stock', value: 'all' },
@@ -35,6 +36,8 @@ const formatOrderDate = (value) => {
     timeStyle: 'short',
   }).format(new Date(value))
 }
+
+const getOrderTotal = (order) => order.totalAmount ?? order.totalPrice
 
 const getProductId = (product) =>
   product.productId || product.id || product._id || product.name
@@ -70,8 +73,6 @@ function DashboardPage({ user, onLogout }) {
   const [orders, setOrders] = useState([])
   const [isLoadingOrders, setIsLoadingOrders] = useState(true)
   const [orderError, setOrderError] = useState('')
-  const [orderStatus, setOrderStatus] = useState('')
-  const [approvingOrderId, setApprovingOrderId] = useState(null)
 
   useEffect(() => {
     let isMounted = true
@@ -202,12 +203,14 @@ function DashboardPage({ user, onLogout }) {
   }, [categories.length, products])
 
   const orderSummary = useMemo(() => {
-    const pendingCount = orders.filter((order) => order.orderStatus === 'PENDING').length
-    const approvedCount = orders.filter((order) => order.orderStatus === 'APPROVED').length
+    const activeCount = orders.filter((order) =>
+      ['CONFIRMED', 'PLACED', 'PROCESSING', 'SHIPPED'].includes(getOrderStatus(order)),
+    ).length
+    const deliveredCount = orders.filter((order) => getOrderStatus(order) === 'DELIVERED').length
 
     return {
-      approvedCount,
-      pendingCount,
+      activeCount,
+      deliveredCount,
       totalOrders: orders.length,
     }
   }, [orders])
@@ -312,27 +315,6 @@ function DashboardPage({ user, onLogout }) {
     }
   }
 
-  const handleApproveOrder = async (orderId) => {
-    setApprovingOrderId(orderId)
-    setOrderError('')
-    setOrderStatus('')
-
-    try {
-      const updatedOrder = await approveOrder(orderId)
-
-      setOrders((currentOrders) =>
-        currentOrders.map((order) =>
-          order.orderId === orderId ? updatedOrder : order,
-        ),
-      )
-      setOrderStatus(`Order #${orderId} approved successfully.`)
-    } catch (error) {
-      setOrderError(error.message || 'Unable to approve order.')
-    } finally {
-      setApprovingOrderId(null)
-    }
-  }
-
   return (
     <main className="dashboard-page">
       <section className="dashboard-shell">
@@ -373,8 +355,8 @@ function DashboardPage({ user, onLogout }) {
               <strong>{inventorySummary.outOfStockCount}</strong>
             </article>
             <article>
-              <span>Pending orders</span>
-              <strong>{orderSummary.pendingCount}</strong>
+              <span>Active orders</span>
+              <strong>{orderSummary.activeCount}</strong>
             </article>
           </div>
         </section>
@@ -382,19 +364,15 @@ function DashboardPage({ user, onLogout }) {
         <section className="product-panel" aria-labelledby="orders-heading">
           <div className="product-panel-header">
             <div>
-              <h2 id="orders-heading">Order approvals</h2>
+              <h2 id="orders-heading">Orders</h2>
               <p>
-                {orderSummary.pendingCount} pending of {orderSummary.totalOrders} orders
+                {orderSummary.activeCount} active of {orderSummary.totalOrders} orders
               </p>
             </div>
-            <span className="approved-count">
-              {orderSummary.approvedCount} approved
+            <span className="order-count">
+              {orderSummary.deliveredCount} delivered
             </span>
           </div>
-
-          {orderStatus ? (
-            <p className="product-message success">{orderStatus}</p>
-          ) : null}
 
           {isLoadingOrders ? (
             <p className="product-message">Loading orders...</p>
@@ -409,15 +387,15 @@ function DashboardPage({ user, onLogout }) {
                       <p>Order #{order.orderId}</p>
                       <h3>{formatOrderDate(order.orderedAt)}</h3>
                     </div>
-                    <span className={`order-status ${String(order.orderStatus || '').toLowerCase()}`}>
-                      {order.orderStatus || 'PENDING'}
+                    <span className={`order-status ${getOrderStatusClass(order)}`}>
+                      {getOrderStatusLabel(order)}
                     </span>
                   </div>
 
                   <div className="order-summary-meta">
                     <div>
                       <span>Total amount</span>
-                      <strong>{formatCurrency(order.totalPrice)}</strong>
+                      <strong>{formatCurrency(getOrderTotal(order))}</strong>
                     </div>
                     <div>
                       <span>Shipping address</span>
@@ -438,16 +416,6 @@ function DashboardPage({ user, onLogout }) {
                         </div>
                       </article>
                     ))}
-                  </div>
-
-                  <div className="admin-order-actions">
-                    <button
-                      type="button"
-                      onClick={() => handleApproveOrder(order.orderId)}
-                      disabled={order.orderStatus !== 'PENDING' || approvingOrderId === order.orderId}
-                    >
-                      {approvingOrderId === order.orderId ? 'Approving...' : 'Approve order'}
-                    </button>
                   </div>
                 </article>
               ))}
@@ -621,48 +589,52 @@ function DashboardPage({ user, onLogout }) {
             <p className="product-message error">{productError}</p>
           ) : filteredProducts.length ? (
             <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <article className="product-card" key={getProductId(product)}>
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name || 'Product'} />
-                  ) : (
-                    <div className="product-image-fallback">
-                      {(product.name || 'P').charAt(0).toUpperCase()}
-                    </div>
-                  )}
+              {filteredProducts.map((product) => {
+                const productImageUrl = getProductImageUrl(product)
 
-                  <div className="product-card-body">
-                    <div>
-                      <p className="product-category">
-                        {product.category || 'Uncategorized'}
+                return (
+                  <article className="product-card" key={getProductId(product)}>
+                    {productImageUrl ? (
+                      <img src={productImageUrl} alt={product.name || 'Product'} />
+                    ) : (
+                      <div className="product-image-fallback">
+                        {(product.name || 'P').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="product-card-body">
+                      <div>
+                        <p className="product-category">
+                          {product.category || 'Uncategorized'}
+                        </p>
+                        <h3>{product.name || 'Untitled product'}</h3>
+                      </div>
+                      <p className="product-description">
+                        {product.description || 'No description available.'}
                       </p>
-                      <h3>{product.name || 'Untitled product'}</h3>
+                      <div className="product-meta">
+                        <strong>{formatCurrency(product.price)}</strong>
+                        <span>{Number(product.quantity || 0)} in stock</span>
+                      </div>
+                      <div className="product-actions">
+                        <button type="button" onClick={() => handleEditProduct(product)}>
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="danger-button"
+                          onClick={() => handleDeleteProduct(product)}
+                          disabled={deletingProductId === getProductId(product)}
+                        >
+                          {deletingProductId === getProductId(product)
+                            ? 'Deleting...'
+                            : 'Delete'}
+                        </button>
+                      </div>
                     </div>
-                    <p className="product-description">
-                      {product.description || 'No description available.'}
-                    </p>
-                    <div className="product-meta">
-                      <strong>{formatCurrency(product.price)}</strong>
-                      <span>{Number(product.quantity || 0)} in stock</span>
-                    </div>
-                    <div className="product-actions">
-                      <button type="button" onClick={() => handleEditProduct(product)}>
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="danger-button"
-                        onClick={() => handleDeleteProduct(product)}
-                        disabled={deletingProductId === getProductId(product)}
-                      >
-                        {deletingProductId === getProductId(product)
-                          ? 'Deleting...'
-                          : 'Delete'}
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                )
+              })}
             </div>
           ) : (
             <p className="product-message">

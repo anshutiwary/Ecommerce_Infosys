@@ -145,6 +145,7 @@ function AppRoutes() {
               currentUser={currentUser}
               isAdmin={isAdminUser(currentUser)}
               cartCount={cartCount}
+              refreshCartCount={loadCartCount}
               onLogout={handleLogout}
             />
           ) : (

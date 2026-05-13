@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getProducts } from '../services/productService'
 import { addToCart } from '../services/cartService'
+import { getProductImageUrl } from '../utils/productImages'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -116,6 +117,7 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
   }
 
   const quantity = Number(product.quantity || 0)
+  const productImageUrl = getProductImageUrl(product)
 
   const handleAddToCart = async () => {
     if (!product) {
@@ -170,9 +172,9 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
 
         <div className="product-details-content">
           <div className="product-gallery">
-            {product.imageUrl ? (
+            {productImageUrl ? (
               <img
-                src={product.imageUrl}
+                src={productImageUrl}
                 alt={product.name || 'Product'}
                 className="product-main-image"
               />

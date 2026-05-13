@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getMyOrders } from '../services/orderService'
+import { getOrderStatusClass, getOrderStatusLabel } from '../utils/orderStatus'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -18,6 +19,21 @@ const formatOrderDate = (value) => {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
+}
+
+const getOrderTotal = (order) => order.totalAmount ?? order.totalPrice
+
+const getOrderProductSummary = (order) => {
+  const items = Array.isArray(order.items) ? order.items : []
+  const productNames = items
+    .map((item) => item.productName || item.name || item.product?.name)
+    .filter(Boolean)
+
+  if (!productNames.length) {
+    return 'Ordered products are not available.'
+  }
+
+  return productNames.join(', ')
 }
 
 function MyOrdersPage({ isAdmin, cartCount, onLogout }) {
@@ -58,7 +74,7 @@ function MyOrdersPage({ isAdmin, cartCount, onLogout }) {
 
   const orderCount = orders.length
   const totalSpent = useMemo(
-    () => orders.reduce((sum, order) => sum + Number(order.totalPrice || 0), 0),
+    () => orders.reduce((sum, order) => sum + Number(getOrderTotal(order) || 0), 0),
     [orders],
   )
 
@@ -123,13 +139,19 @@ function MyOrdersPage({ isAdmin, cartCount, onLogout }) {
                     <p>Order #{order.orderId}</p>
                     <h2>{formatOrderDate(order.orderedAt)}</h2>
                   </div>
-                  <span>{order.orderStatus || 'PENDING'}</span>
+                  <span className={`order-status ${getOrderStatusClass(order)}`}>
+                    {getOrderStatusLabel(order)}
+                  </span>
                 </div>
 
                 <div className="order-summary-meta">
                   <div>
                     <span>Total amount</span>
-                    <strong>{formatCurrency(order.totalPrice)}</strong>
+                    <strong>{formatCurrency(getOrderTotal(order))}</strong>
+                  </div>
+                  <div>
+                    <span>Products</span>
+                    <strong>{getOrderProductSummary(order)}</strong>
                   </div>
                   <div>
                     <span>Shipping address</span>

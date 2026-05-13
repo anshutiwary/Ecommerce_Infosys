@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.infosys.backend.model.OrderStatus;
 import com.infosys.backend.model.PaymentMethod;
+import com.infosys.backend.model.PaymentStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,10 @@ public class CheckoutResponse {
     private BigDecimal totalAmount;
     private OrderStatus orderStatus;
     private PaymentMethod paymentMethod;
+    private PaymentStatus paymentStatus;
+    private String paymentReference;
+    private String maskedPaymentIdentifier;
+    private String paymentFailureReason;
     private String shippingAddress;
     private Instant orderedAt;
     private List<CheckoutItemResponse> items;

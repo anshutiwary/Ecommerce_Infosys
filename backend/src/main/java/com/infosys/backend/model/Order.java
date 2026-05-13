@@ -62,11 +62,25 @@ public class Order {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private OrderStatus status = OrderStatus.PENDING;
+    private OrderStatus status = OrderStatus.CONFIRMED;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private PaymentMethod paymentMethod;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    @Column(length = 120)
+    private String paymentReference;
+
+    @Column(length = 120)
+    private String maskedPaymentIdentifier;
+
+    @Column(length = 255)
+    private String paymentFailureReason;
 
     @Column(nullable = false)
     private String shippingAddress;
@@ -82,6 +96,12 @@ public class Order {
         Instant now = Instant.now();
         if (this.orderNumber == null || this.orderNumber.isBlank()) {
             this.orderNumber = "ORD-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+        }
+        if (this.status == null) {
+            this.status = OrderStatus.CONFIRMED;
+        }
+        if (this.paymentStatus == null) {
+            this.paymentStatus = PaymentStatus.PENDING;
         }
         if (this.orderedAt == null) {
             this.orderedAt = now;

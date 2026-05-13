@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.infosys.backend.dto.CheckoutRequest;
 import com.infosys.backend.dto.CheckoutResponse;
+import com.infosys.backend.dto.PaymentDetailsRequest;
+import com.infosys.backend.dto.ShippingAddressRequest;
 import com.infosys.backend.exception.UnauthorizedException;
 import com.infosys.backend.model.User;
 import com.infosys.backend.service.CheckoutService;
@@ -37,9 +39,39 @@ public class CheckoutController {
             Authentication authentication) {
 
         User user = getAuthenticatedUser(authentication);
-        CheckoutResponse response = checkoutService.checkout(user, request.getShippingAddress(), request.getPaymentMethod());
+        CheckoutResponse response = checkoutService.checkout(user, request.getShippingAddress(), request.getPaymentDetails());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/orders/{orderId}/shipping-address")
+    public ResponseEntity<CheckoutResponse> saveShippingAddress(
+            @PathVariable int orderId,
+            @Valid @RequestBody ShippingAddressRequest request,
+            Authentication authentication) {
+
+        User user = getAuthenticatedUser(authentication);
+        return ResponseEntity.ok(checkoutService.saveShippingAddress(user, orderId, request));
+    }
+
+    @PostMapping("/orders/{orderId}/payment-details")
+    public ResponseEntity<CheckoutResponse> savePaymentDetails(
+            @PathVariable int orderId,
+            @Valid @RequestBody PaymentDetailsRequest request,
+            Authentication authentication) {
+
+        User user = getAuthenticatedUser(authentication);
+        return ResponseEntity.ok(checkoutService.savePaymentDetails(user, orderId, request));
+    }
+
+    @PostMapping("/orders/{orderId}/payment")
+    public ResponseEntity<CheckoutResponse> processPayment(
+            @PathVariable int orderId,
+            @Valid @RequestBody PaymentDetailsRequest request,
+            Authentication authentication) {
+
+        User user = getAuthenticatedUser(authentication);
+        return ResponseEntity.ok(checkoutService.processPayment(user, orderId, request));
     }
 
     @GetMapping("/orders")
@@ -57,11 +89,6 @@ public class CheckoutController {
     @GetMapping("/admin/orders")
     public ResponseEntity<?> getAllOrders() {
         return ResponseEntity.ok(checkoutService.getAllOrders());
-    }
-
-    @PostMapping("/admin/orders/{orderId}/approve")
-    public ResponseEntity<CheckoutResponse> approveOrder(@PathVariable int orderId) {
-        return ResponseEntity.ok(checkoutService.approveOrder(orderId));
     }
 
     private User getAuthenticatedUser(Authentication authentication) {

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getProducts } from '../services/productService'
+import { addToCart } from '../services/cartService'
+import { getProductImageUrl } from '../utils/productImages'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -19,7 +21,7 @@ const sortOptions = [
   { label: 'Newest First', value: 'newest' },
 ]
 
-function HomePage({ isAdmin, cartCount, onLogout }) {
+function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
   const [products, setProducts] = useState([])
   const [isLoadingProducts, setIsLoadingProducts] = useState(true)
   const [productError, setProductError] = useState('')
@@ -27,6 +29,8 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [maxPrice, setMaxPrice] = useState('')
   const [sortBy, setSortBy] = useState('featured')
+  const [addingProductId, setAddingProductId] = useState(null)
+  const [cartStatus, setCartStatus] = useState({ productId: null, type: '', message: '' })
 
   useEffect(() => {
     let isMounted = true
@@ -138,6 +142,32 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
     setCategoryFilter('all')
     setMaxPrice('')
     setSortBy('featured')
+  }
+
+  const handleAddToCart = async (product) => {
+    const productId = getProductId(product)
+    if (!productId) {
+      return
+    }
+
+    setAddingProductId(productId)
+    setCartStatus({ productId, type: '', message: '' })
+
+    try {
+      await addToCart(Number(productId), 1)
+      if (typeof refreshCartCount === 'function') {
+        await refreshCartCount()
+      }
+      setCartStatus({ productId, type: 'success', message: 'Product added to cart.' })
+    } catch (error) {
+      setCartStatus({
+        productId,
+        type: 'error',
+        message: error.message || 'Unable to add product to cart.',
+      })
+    } finally {
+      setAddingProductId(null)
+    }
   }
 
   return (
@@ -262,10 +292,12 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
           ) : filteredProducts.length ? (
             <div className="store-grid">
               {filteredProducts.map((product) => {
+                const productImageUrl = getProductImageUrl(product)
+
                 return (
                   <article className="store-card" key={getProductId(product)}>
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name || 'Product'} />
+                    {productImageUrl ? (
+                      <img src={productImageUrl} alt={product.name || 'Product'} />
                     ) : (
                       <div className="product-image-fallback">
                         {(product.name || 'P').charAt(0).toUpperCase()}
@@ -280,13 +312,32 @@ function HomePage({ isAdmin, cartCount, onLogout }) {
                         {product.description || 'No description available.'}
                       </p>
                       <strong>{formatCurrency(product.price)}</strong>
-                      <Link 
-                        to={`/product/${getProductId(product)}`}
-                        className="view-details-link"
-                        title="View product details"
-                      >
-                        View Details
-                      </Link>
+                      <div className="store-card-actions">
+                        <button
+                          type="button"
+                          className="primary-button"
+                          disabled={Number(product.quantity || 0) === 0 || addingProductId === getProductId(product)}
+                          onClick={() => handleAddToCart(product)}
+                        >
+                          {addingProductId === getProductId(product)
+                            ? 'Adding...'
+                            : Number(product.quantity || 0) > 0
+                              ? '🛒 Add to Cart'
+                              : 'Unavailable'}
+                        </button>
+                        <Link
+                          to={`/product/${getProductId(product)}`}
+                          className="view-details-link"
+                          title="View product details"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+                      {cartStatus.productId === getProductId(product) && cartStatus.message ? (
+                        <p className={`form-status ${cartStatus.type}`}>
+                          {cartStatus.message}
+                        </p>
+                      ) : null}
                     </div>
                   </article>
                 )

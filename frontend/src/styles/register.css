@@ -885,7 +885,7 @@ button:focus-visible {
   color: var(--color-muted);
 }
 
-.approved-count {
+.order-count {
   padding: 8px 12px;
   border-radius: 999px;
   background: var(--color-success-soft);
@@ -936,44 +936,24 @@ button:focus-visible {
   font-weight: 900;
 }
 
-.order-status.approved,
+.order-status.placed,
 .order-status.confirmed,
+.order-status.processing,
 .order-status.delivered {
   background: var(--color-success-soft);
   color: var(--color-success);
 }
 
-.order-status.cancelled {
+.order-status.shipped {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.order-status.failed,
+.order-status.cancelled,
+.order-status.canceled {
   background: var(--color-danger-soft);
   color: var(--color-danger);
-}
-
-.admin-order-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.admin-order-actions button {
-  min-height: 42px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: var(--radius-control);
-  background: var(--color-success);
-  color: #ffffff;
-  font-weight: 900;
-  cursor: pointer;
-  transition: all var(--transition-normal);
-}
-
-.admin-order-actions button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-hover);
-}
-
-.admin-order-actions button:disabled {
-  background: var(--color-border-strong);
-  color: var(--color-subtle);
-  cursor: not-allowed;
 }
 
 .filter-clear,
@@ -2064,7 +2044,7 @@ button:focus-visible {
   position: sticky;
   top: 20px;
   display: grid;
-  gap: 20px;
+  gap: 18px;
   padding: 24px;
 }
 
@@ -2104,6 +2084,36 @@ button:focus-visible {
   background: var(--color-surface-muted);
 }
 
+.checkout-page .checkout-item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) minmax(130px, auto);
+  align-items: center;
+}
+
+.checkout-item-preview {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  text-decoration: none;
+}
+
+.checkout-item-preview img,
+.checkout-item-preview .product-image-fallback {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.checkout-item-preview .product-image-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
 .checkout-item h3 {
   margin: 0 0 6px;
   color: var(--color-text);
@@ -2116,6 +2126,39 @@ button:focus-visible {
   color: var(--color-muted);
   font-size: 0.92rem;
   font-weight: 700;
+}
+
+.checkout-item-details {
+  min-width: 0;
+}
+
+.checkout-item-name {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.checkout-item-name:hover {
+  color: var(--color-primary);
+}
+
+.checkout-item-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.checkout-item-meta span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-subtle);
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .checkout-item-money {
@@ -2133,16 +2176,35 @@ button:focus-visible {
   font-weight: 900;
 }
 
+.checkout-field-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.checkout-field-group h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.checkout-field-wide {
+  grid-column: 1 / -1;
+}
+
 .checkout-address-field {
   display: grid;
   gap: 8px;
   color: var(--color-text);
   font-weight: 800;
+  font-size: 0.9rem;
 }
 
+.checkout-address-field input,
 .checkout-address-field textarea {
-  resize: vertical;
-  min-height: 110px;
+  width: 100%;
+  min-height: 46px;
   padding: 12px;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-control);
@@ -2151,10 +2213,39 @@ button:focus-visible {
   transition: all var(--transition-normal);
 }
 
+.checkout-address-field textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.checkout-address-field input:focus,
 .checkout-address-field textarea:focus {
   border-color: var(--color-primary);
   box-shadow: var(--focus-ring);
   outline: none;
+}
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.success-banner {
+  margin: 16px 0 0;
+  padding: 18px 20px;
+  border-radius: var(--radius-panel);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: var(--shadow-card);
+}
+
+.success-banner p {
+  margin: 0;
+  font-weight: 800;
 }
 
 .payment-method-field {
@@ -2206,6 +2297,53 @@ button:focus-visible {
 
 .checkout-total-row strong {
   font-size: 1.5rem;
+}
+
+.checkout-summary-card {
+  display: grid;
+  gap: 18px;
+}
+
+.checkout-summary-lines {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+}
+
+.checkout-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--color-subtle);
+  font-weight: 800;
+}
+
+.checkout-summary-row strong {
+  color: var(--color-text);
+}
+
+.checkout-summary-row-total {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 1.05rem;
+}
+
+.checkout-summary-row-total strong {
+  color: var(--color-accent);
+  font-size: 1.45rem;
+}
+
+.checkout-summary-note {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .checkout-button {
@@ -2388,9 +2526,28 @@ button:focus-visible {
     flex-direction: column;
   }
 
+  .checkout-page .checkout-item {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+
+  .checkout-field-group {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-field-wide {
+    grid-column: auto;
+  }
+
   .checkout-item-money {
     justify-items: start;
     text-align: left;
+  }
+
+  .checkout-page .checkout-item-money {
+    grid-column: 1 / -1;
+    width: 100%;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
   }
 
   .my-order-card-header {

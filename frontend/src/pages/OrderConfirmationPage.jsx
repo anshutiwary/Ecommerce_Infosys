@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { getOrderStatusClass, getOrderStatusLabel } from '../utils/orderStatus'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -19,6 +20,18 @@ const formatOrderDate = (value) => {
   }).format(new Date(value))
 }
 
+const formatPaymentMethod = (value) => {
+  if (!value) {
+    return 'Not specified'
+  }
+
+  return String(value)
+    .toLowerCase()
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 function OrderConfirmationPage({ isAdmin, cartCount, onLogout }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -34,9 +47,12 @@ function OrderConfirmationPage({ isAdmin, cartCount, onLogout }) {
     return null
   }
 
+  const successMessage = location.state?.successMessage
   const orderDate = order.orderedAt || order.createdAt || order.orderDate
-  const paymentMethod = order.paymentMethod || 'Not specified'
+  const paymentMethod = formatPaymentMethod(order.paymentMethod)
+  const totalPaid = order.totalAmount ?? order.totalPrice
   const orderItems = Array.isArray(order.items) ? order.items : []
+  const orderStatusLabel = getOrderStatusLabel(order)
 
   return (
     <main className="order-confirmation-page">
@@ -67,19 +83,27 @@ function OrderConfirmationPage({ isAdmin, cartCount, onLogout }) {
           </Link>
         </div>
 
+        {successMessage ? (
+          <div className="success-banner">
+            <p>{successMessage}</p>
+          </div>
+        ) : null}
+
         <section className="order-summary-panel">
           <div className="checkout-section-heading">
             <div>
               <p>Order #{order.orderId}</p>
               <h2>{formatOrderDate(orderDate)}</h2>
             </div>
-            <span>{order.orderStatus || 'CONFIRMED'}</span>
+            <span className={`order-status ${getOrderStatusClass(order)}`}>
+              {orderStatusLabel}
+            </span>
           </div>
 
           <div className="order-summary-meta">
             <div>
               <span>Total paid</span>
-              <strong>{formatCurrency(order.totalPrice)}</strong>
+              <strong>{formatCurrency(totalPaid)}</strong>
             </div>
             <div>
               <span>Shipping address</span>
@@ -107,7 +131,7 @@ function OrderConfirmationPage({ isAdmin, cartCount, onLogout }) {
           </div>
 
           <div className="checkout-empty-state" style={{ marginTop: '24px' }}>
-            <h3>Your order has been placed successfully.</h3>
+            <h3>{orderStatusLabel}</h3>
             <p>Your items will be processed and shipped soon.</p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
               <Link to="/" className="view-all-link">

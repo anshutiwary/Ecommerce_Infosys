@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { normalizeOrdersPayload } from '../utils/orderStatus'
 
 const ORDERS_API_URL = '/api/orders'
 
@@ -12,7 +13,7 @@ export async function getMyOrders() {
       withCredentials: true,
     })
 
-    return Array.isArray(response.data) ? response.data : []
+    return normalizeOrdersPayload(response.data)
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Unable to load your orders.'))
   }

@@ -5,6 +5,7 @@ import {
   removeFromCart,
   updateCartQuantity,
 } from '../services/cartService'
+import { getProductImageUrl } from '../utils/productImages'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -183,15 +184,16 @@ function CartPage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
               {cartItems.map((cartItem) => {
                 const product = cartItem.product || {}
                 const productId = getProductId(product)
+                const productImageUrl = getProductImageUrl(product)
                 const quantity = Number(quantities[productId] || cartItem.quantity || 1)
                 const subtotal = Number(product.price || 0) * quantity
 
                 return (
                   <article className="cart-item" key={productId}>
                     <div className="cart-item-preview">
-                      {product.imageUrl ? (
+                      {productImageUrl ? (
                         <img
-                          src={product.imageUrl}
+                          src={productImageUrl}
                           alt={product.name || 'Product'}
                         />
                       ) : (
