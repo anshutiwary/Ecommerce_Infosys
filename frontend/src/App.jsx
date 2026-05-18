@@ -12,9 +12,12 @@ import LoginPage from './pages/LoginPage'
 import ProductDetailsPage from './pages/ProductDetailsPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
-import MyOrdersPage from './pages/MyOrdersPage'
+import OrderHistory from './pages/OrderHistory'
+import ProfilePage from './pages/ProfilePage'
+import ChangePasswordPage from './pages/ChangePasswordPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import RegisterPage from './pages/RegisterPage'
+import ProtectedRoute from './components/ProtectedRoute'
 import { getCart } from './services/cartService'
 import {
   logoutUser,
@@ -115,12 +118,24 @@ function AppRoutes() {
     )
   }
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await logoutUser()
     setCurrentUser(null)
     setCartCount(0)
     navigate('/login', { replace: true })
-  }
+  }, [navigate])
+
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      handleLogout()
+    }
+
+    window.addEventListener('authLogout', handleAuthLogout)
+
+    return () => {
+      window.removeEventListener('authLogout', handleAuthLogout)
+    }
+  }, [handleLogout])
 
   if (isCheckingSession) {
     return (
@@ -254,16 +269,40 @@ function AppRoutes() {
       <Route
         path="/orders"
         element={
-          currentUser ? (
-            <MyOrdersPage
+          <ProtectedRoute currentUser={currentUser}>
+            <OrderHistory
               currentUser={currentUser}
               isAdmin={isAdminUser(currentUser)}
               cartCount={cartCount}
               onLogout={handleLogout}
             />
-          ) : (
-            <Navigate to="/login" replace />
-          )
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute currentUser={currentUser}>
+            <ProfilePage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
+              onLogout={handleLogout}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/change-password"
+        element={
+          <ProtectedRoute currentUser={currentUser}>
+            <ChangePasswordPage
+              currentUser={currentUser}
+              isAdmin={isAdminUser(currentUser)}
+              cartCount={cartCount}
+              onLogout={handleLogout}
+            />
+          </ProtectedRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

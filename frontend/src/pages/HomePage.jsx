@@ -187,7 +187,8 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
         </label>
         <nav className="store-nav" aria-label="Primary navigation">
           {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
-          <Link to="/orders">My Orders</Link>
+          <Link to="/orders">Order History</Link>
+          <Link to="/profile">Profile</Link>
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
           </Link>

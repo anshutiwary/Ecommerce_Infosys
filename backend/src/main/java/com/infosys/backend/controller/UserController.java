@@ -14,10 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 import com.infosys.backend.dto.AuthResponse;
 import com.infosys.backend.dto.LoginRequest;
+import com.infosys.backend.dto.PasswordUpdateRequest;
+import com.infosys.backend.dto.ProfileUpdateRequest;
 import com.infosys.backend.model.User;
 import com.infosys.backend.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -90,6 +93,46 @@ public class UserController {
         } catch (RuntimeException ex) {
             return ResponseEntity
                     .status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateProfile(
+            Authentication authentication,
+            @Valid @RequestBody ProfileUpdateRequest profileRequest) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized"));
+        }
+
+        try {
+            User updatedUser = userService.updateUserProfile(authentication.getName(), profileRequest);
+            return ResponseEntity.ok(toSafeUserResponse(updatedUser));
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody PasswordUpdateRequest passwordRequest) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Unauthorized"));
+        }
+
+        try {
+            userService.updatePassword(authentication.getName(), passwordRequest);
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+        } catch (RuntimeException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("message", ex.getMessage()));
         }
     }

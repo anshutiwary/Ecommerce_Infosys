@@ -1,80 +1,58 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/users'
-const AUTH_VERIFY_URL = import.meta.env.VITE_AUTH_VERIFY_URL || `${API_BASE_URL}/me`
+import api from '../api/axiosClient'
+import { getToken, removeToken, setToken, isTokenExpired } from './tokenService'
+
+const AUTH_BASE_URL = '/users'
+
+function getApiErrorMessage(error, fallbackMessage) {
+  return error.response?.data?.message || error.message || fallbackMessage
+}
 
 export async function verifyStoredSession() {
-  const response = await fetch(AUTH_VERIFY_URL, {
-    method: 'GET',
-    credentials: 'include',
-  })
+  const token = getToken()
 
-  let data = null
+  if (token && isTokenExpired(token)) {
+    removeToken()
+    throw new Error('Session expired. Please sign in again.')
+  }
 
   try {
-    data = await response.json()
-  } catch {
-    data = null
+    const response = await api.get(`${AUTH_BASE_URL}/me`)
+    return response.data
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Session verification failed.'))
   }
-
-  if (!response.ok) {
-    throw new Error(data?.message || 'Session verification failed.')
-  }
-
-  return data || { message: 'Session verified.' }
 }
 
 export async function registerUser(userData) {
-  const response = await fetch(`${API_BASE_URL}/register`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  })
-
-  let data = null
-
   try {
-    data = await response.json()
-  } catch {
-    data = null
+    const response = await api.post(`${AUTH_BASE_URL}/register`, userData)
+    return response.data || { message: 'Registration successful.' }
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Registration request failed.'))
   }
-
-  if (!response.ok) {
-    throw new Error(data?.message || 'Registration request failed.')
-  }
-
-  return data || { message: 'Registration successful.' }
 }
 
 export async function loginUser(credentials) {
-  const response = await fetch(`${API_BASE_URL}/login`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(credentials),
-  })
-
-  let data = null
-
   try {
-    data = await response.json()
-  } catch {
-    data = null
-  }
+    const response = await api.post(`${AUTH_BASE_URL}/login`, credentials)
+    const responseData = response.data || { message: 'Login successful.' }
 
-  if (!response.ok) {
-    throw new Error(data?.message || 'Login request failed.')
-  }
+    if (responseData.accessToken) {
+      setToken(responseData.accessToken)
+    }
 
-  return data || { message: 'Login successful.' }
+    return responseData
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Login request failed.'))
+  }
 }
 
 export async function logoutUser() {
-  await fetch(`${API_BASE_URL}/logout`, {
-    method: 'POST',
-    credentials: 'include',
-  })
+  removeToken()
+
+  try {
+    await api.post(`${AUTH_BASE_URL}/logout`)
+  } catch {
+    // ignore logout network errors when clearing client session
+  }
 }

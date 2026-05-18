@@ -4,6 +4,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.infosys.backend.dto.AuthResponse;
+import com.infosys.backend.dto.PasswordUpdateRequest;
+import com.infosys.backend.dto.ProfileUpdateRequest;
+import com.infosys.backend.exception.BadRequestException;
 import com.infosys.backend.model.User;
 import com.infosys.backend.repository.UserRepository;
 import com.infosys.backend.security.JwtConfig;
@@ -48,5 +51,27 @@ public class UserService {
     public User getUserById(int userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Invalid user"));
+    }
+
+    public User updateUserProfile(String email, ProfileUpdateRequest profileRequest) {
+        User user = getUserByEmail(email);
+        user.setName(profileRequest.getName());
+
+        if (profileRequest.getPhone() != null && !profileRequest.getPhone().isBlank()) {
+            user.setPhone(profileRequest.getPhone().trim());
+        }
+
+        return userRepository.save(user);
+    }
+
+    public void updatePassword(String email, PasswordUpdateRequest passwordRequest) {
+        User user = getUserByEmail(email);
+
+        if (!passwordEncoder.matches(passwordRequest.getCurrentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
+        userRepository.save(user);
     }
 }
