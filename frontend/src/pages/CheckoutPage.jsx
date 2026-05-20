@@ -5,6 +5,7 @@ import CheckoutItem from '../components/checkout/CheckoutItem'
 import OrderSummary from '../components/checkout/OrderSummary'
 import { getCart } from '../services/cartService'
 import { checkoutCart } from '../services/checkoutService'
+import { getProfile } from '../services/userService'
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-IN', {
@@ -38,6 +39,34 @@ const requiredShippingFields = [
 const TAX_RATE = 0.18
 const DELIVERY_CHARGE = 199
 const FREE_DELIVERY_THRESHOLD = 50000
+
+const emptyShippingAddress = {
+  fullName: '',
+  phone: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: 'India',
+}
+
+const getProfilePayload = (data) => data?.user || data?.data?.user || data?.data || data || {}
+
+const normalizeSavedAddress = (data) => {
+  const address = data?.address || data?.shippingAddress || data?.defaultAddress || data || {}
+
+  return {
+    fullName: address.fullName || address.name || data?.name || '',
+    phone: address.phone || data?.phone || '',
+    addressLine1: address.addressLine1 || address.line1 || address.street || '',
+    addressLine2: address.addressLine2 || address.line2 || address.landmark || '',
+    city: address.city || '',
+    state: address.state || '',
+    postalCode: address.postalCode || address.zipCode || address.pincode || '',
+    country: address.country || 'India',
+  }
+}
 
 const getCheckoutPricing = (cartItems) => {
   const subtotal = cartItems.reduce((sum, cartItem) => {
@@ -108,16 +137,7 @@ function CheckoutPage({ currentUser, isAdmin, cartCount, refreshCartCount, onLog
   const [cartItems, setCartItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCheckingOut, setIsCheckingOut] = useState(false)
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    phone: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    postalCode: '',
-    country: 'India',
-  })
+  const [shippingAddress, setShippingAddress] = useState(emptyShippingAddress)
   const [paymentDetails, setPaymentDetails] = useState({
     paymentMethod: 'CASH_ON_DELIVERY',
     cardholderName: '',
@@ -142,10 +162,22 @@ function CheckoutPage({ currentUser, isAdmin, cartCount, refreshCartCount, onLog
       setError('')
 
       try {
-        const cart = await getCart()
+        const [cart, profileResult] = await Promise.allSettled([getCart(), getProfile()])
+
+        if (cart.status === 'rejected') {
+          throw cart.reason
+        }
 
         if (isMounted) {
-          setCartItems(cart)
+          setCartItems(cart.value)
+
+          if (profileResult.status === 'fulfilled') {
+            setShippingAddress((currentAddress) => ({
+              ...currentAddress,
+              ...normalizeSavedAddress(getProfilePayload(profileResult.value)),
+            }))
+          }
+
           if (typeof refreshCartCount === 'function') {
             await refreshCartCount()
           }

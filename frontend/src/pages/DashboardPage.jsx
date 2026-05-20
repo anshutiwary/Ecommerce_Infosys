@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LiveStatusBar from '../components/LiveStatusBar'
 import {
   addProduct,
   deleteProduct,
@@ -73,6 +74,7 @@ function DashboardPage({ user, onLogout }) {
   const [orders, setOrders] = useState([])
   const [isLoadingOrders, setIsLoadingOrders] = useState(true)
   const [orderError, setOrderError] = useState('')
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
     let isMounted = true
@@ -86,6 +88,7 @@ function DashboardPage({ user, onLogout }) {
 
         if (isMounted) {
           setProducts(productList)
+          setLastUpdated(new Date())
         }
       } catch (error) {
         if (isMounted) {
@@ -117,6 +120,7 @@ function DashboardPage({ user, onLogout }) {
 
         if (isMounted) {
           setOrders(orderList)
+          setLastUpdated(new Date())
         }
       } catch (error) {
         if (isMounted) {
@@ -134,6 +138,35 @@ function DashboardPage({ user, onLogout }) {
     return () => {
       isMounted = false
     }
+  }, [])
+
+  useEffect(() => {
+    const refreshTimer = window.setInterval(() => {
+      const refreshWorkspace = async () => {
+        const [productResult, orderResult] = await Promise.allSettled([
+          getProducts(),
+          getAdminOrders(),
+        ])
+
+        if (productResult.status === 'fulfilled') {
+          setProducts(productResult.value)
+          setProductError('')
+        }
+
+        if (orderResult.status === 'fulfilled') {
+          setOrders(orderResult.value)
+          setOrderError('')
+        }
+
+        if (productResult.status === 'fulfilled' || orderResult.status === 'fulfilled') {
+          setLastUpdated(new Date())
+        }
+      }
+
+      refreshWorkspace()
+    }, 45000)
+
+    return () => window.clearInterval(refreshTimer)
   }, [])
 
   const categories = useMemo(() => {
@@ -278,6 +311,7 @@ function DashboardPage({ user, onLogout }) {
         setProductStatus('Product added successfully.')
       }
 
+      setLastUpdated(new Date())
       setProductForm(blankProductForm)
       setEditingProductId(null)
     } catch (error) {
@@ -303,6 +337,7 @@ function DashboardPage({ user, onLogout }) {
       setProducts((currentProducts) =>
         currentProducts.filter((currentProduct) => getProductId(currentProduct) !== productId),
       )
+      setLastUpdated(new Date())
       setProductStatus('Product deleted successfully.')
 
       if (editingProductId === productId) {
@@ -336,6 +371,11 @@ function DashboardPage({ user, onLogout }) {
             <p>Welcome back,</p>
             <h2>{displayName}</h2>
             <span>Monitor inventory health and keep your product catalog current.</span>
+            <LiveStatusBar
+              itemCount={products.length + orders.length}
+              lastUpdated={lastUpdated}
+              label="Workspace live"
+            />
           </div>
           <div className="dashboard-metrics" aria-label="Inventory summary">
             <article>

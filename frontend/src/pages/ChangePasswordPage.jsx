@@ -94,6 +94,10 @@ function ChangePasswordPage({ cartCount, isAdmin, onLogout }) {
 
         <div className="profile-form-card">
           <form onSubmit={handleSubmit} className="profile-form">
+            {status.message ? (
+              <p className={`profile-status-message ${status.type}`}>{status.message}</p>
+            ) : null}
+
             <label>
               <span>Current password</span>
               <input

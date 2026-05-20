@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LiveStatusBar from '../components/LiveStatusBar'
 import { getProducts } from '../services/productService'
 import { addToCart } from '../services/cartService'
 import { getProductImageUrl } from '../utils/productImages'
@@ -31,6 +32,7 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
   const [sortBy, setSortBy] = useState('featured')
   const [addingProductId, setAddingProductId] = useState(null)
   const [cartStatus, setCartStatus] = useState({ productId: null, type: '', message: '' })
+  const [lastUpdated, setLastUpdated] = useState(null)
 
   useEffect(() => {
     let isMounted = true
@@ -44,6 +46,7 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
 
         if (isMounted) {
           setProducts(productList)
+          setLastUpdated(new Date())
         }
       } catch (error) {
         if (isMounted) {
@@ -61,6 +64,25 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
     return () => {
       isMounted = false
     }
+  }, [])
+
+  useEffect(() => {
+    const refreshTimer = window.setInterval(() => {
+      const refreshProducts = async () => {
+        try {
+          const productList = await getProducts()
+          setProducts(productList)
+          setLastUpdated(new Date())
+          setProductError('')
+        } catch {
+          // Keep the visible catalog stable during a missed background refresh.
+        }
+      }
+
+      refreshProducts()
+    }, 45000)
+
+    return () => window.clearInterval(refreshTimer)
   }, [])
 
   const categories = useMemo(() => {
@@ -158,6 +180,7 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
       if (typeof refreshCartCount === 'function') {
         await refreshCartCount()
       }
+      setLastUpdated(new Date())
       setCartStatus({ productId, type: 'success', message: 'Product added to cart.' })
     } catch (error) {
       setCartStatus({
@@ -179,14 +202,14 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
         <label className="store-search">
           <input
             type="search"
-            placeholder="🔍 Search products..."
+            placeholder="Search products..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             aria-label="Search products"
           />
         </label>
         <nav className="store-nav" aria-label="Primary navigation">
-          {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
+          {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
           <Link to="/orders">Order History</Link>
           <Link to="/profile">Profile</Link>
           <Link to="/cart" className="cart-link">
@@ -200,12 +223,17 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
 
       <section className="store-hero">
         <div>
-          <p>✨ Today's selection</p>
-          <h1>🎯 Discover products for every requirement.</h1>
+          <p>Live commerce catalog</p>
+          <h1>Discover reliable products with stock-aware shopping.</h1>
           <span>
             Browse the catalog with fast search and practical filters.
           </span>
         </div>
+        <LiveStatusBar
+          itemCount={products.length}
+          lastUpdated={lastUpdated}
+          label="Catalog online"
+        />
       </section>
 
       {categoryHighlights.length ? (
@@ -227,14 +255,14 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
       <section className="store-layout" aria-labelledby="catalog-heading">
         <aside className="store-sidebar" aria-label="Product filters">
           <div className="store-filter-header">
-            <h2>🎚️ Filters</h2>
+            <h2>Filters</h2>
             <button type="button" onClick={clearFilters} disabled={!hasActiveFilters}>
               Clear
             </button>
           </div>
 
           <label>
-            <span>📁 Category</span>
+            <span>Category</span>
             <select
               value={categoryFilter}
               onChange={(event) => setCategoryFilter(event.target.value)}
@@ -265,7 +293,7 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
         <section className="store-catalog">
           <div className="catalog-toolbar">
             <div>
-              <h2 id="catalog-heading">📦 Product Listing</h2>
+              <h2 id="catalog-heading">Product listing</h2>
               <p>
                 Showing {filteredProducts.length} of {products.length} products
               </p>
@@ -287,9 +315,9 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
           </div>
 
           {isLoadingProducts ? (
-            <p className="product-message">⏳ Loading products...</p>
+            <p className="product-message">Loading products...</p>
           ) : productError ? (
-            <p className="product-message error">❌ {productError}</p>
+            <p className="product-message error">{productError}</p>
           ) : filteredProducts.length ? (
             <div className="store-grid">
               {filteredProducts.map((product) => {
@@ -323,7 +351,7 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
                           {addingProductId === getProductId(product)
                             ? 'Adding...'
                             : Number(product.quantity || 0) > 0
-                              ? '🛒 Add to Cart'
+                              ? 'Add to cart'
                               : 'Unavailable'}
                         </button>
                         <Link
@@ -346,7 +374,7 @@ function HomePage({ isAdmin, cartCount, refreshCartCount, onLogout }) {
             </div>
           ) : (
             <p className="product-message">
-              🔍 No products match your search and filters.
+              No products match your search and filters.
             </p>
           )}
         </section>

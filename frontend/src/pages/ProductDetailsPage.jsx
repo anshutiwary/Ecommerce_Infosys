@@ -78,7 +78,7 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
             </button>
           </nav>
         </header>
-        <div className="product-details-container">
+      <div className="product-details-container">
           <p className="loading-message">Loading product details...</p>
         </div>
       </main>
@@ -150,7 +150,7 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
           ProductHub
         </Link>
         <nav className="store-nav" aria-label="Primary navigation">
-          {isAdmin ? <Link to="/dashboard">📈 Admin Panel</Link> : null}
+          {isAdmin ? <Link to="/dashboard">Admin Panel</Link> : null}
           <Link to="/orders">My Orders</Link>
           <Link to="/cart" className="cart-link">
             Cart{cartCount > 0 ? ` (${cartCount})` : ''}
@@ -161,11 +161,11 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
         </nav>
       </header>
 
-      <div className="product-details-container">
+        <div className="product-details-container">
         <nav className="breadcrumb">
-          <Link to="/">🏠 Home</Link>
+          <Link to="/">Home</Link>
           <span>/</span>
-          <Link to="/">📦 Products</Link>
+          <Link to="/">Products</Link>
           <span>/</span>
           <span>{product.name || 'Product Details'}</span>
         </nav>
@@ -188,16 +188,16 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
           <div className="product-info">
             <div className="product-header">
               <span className="product-category">
-                📂 {product.category || 'Uncategorized'}
+                {product.category || 'Uncategorized'}
               </span>
               <h1>{product.name || 'Untitled product'}</h1>
               <div className="product-price-section">
-                <strong className="product-price">💰 {formatCurrency(product.price)}</strong>
+                <strong className="product-price">{formatCurrency(product.price)}</strong>
               </div>
             </div>
 
             <div className="product-description-section">
-              <h2>📝 Description</h2>
+              <h2>Description</h2>
               <p className="product-description">
                 {product.description || 'No description available for this product.'}
               </p>
@@ -210,15 +210,15 @@ function ProductDetailsPage({ isAdmin, cartCount, refreshCartCount, onLogout }) 
                 disabled={quantity === 0 || isAddingToCart}
                 onClick={handleAddToCart}
               >
-                {isAddingToCart ? '⏳ Adding...' : quantity > 0 ? '🛒 Add to Cart' : 'Unavailable'}
+                {isAddingToCart ? 'Adding...' : quantity > 0 ? 'Add to cart' : 'Unavailable'}
               </button>
               <button type="button" className="wishlist-btn">
-                ❤️ Add to Wishlist
+                Add to wishlist
               </button>
             </div>
             {cartStatus.message ? (
               <p className={`form-status ${cartStatus.type}`}>
-                {cartStatus.type === 'success' ? '✅' : '❌'} {cartStatus.message}
+                {cartStatus.message}
               </p>
             ) : null}
           </div>

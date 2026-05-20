@@ -30,3 +30,12 @@ export async function changePassword(passwordData) {
     throw new Error(getApiErrorMessage(error, 'Unable to change password.'))
   }
 }
+
+export async function updateAddress(addressData) {
+  try {
+    const response = await api.put('/users/me/address', addressData)
+    return response.data
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to update address.'))
+  }
+}

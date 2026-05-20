@@ -1,14 +1,43 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getProfile, updateProfile } from '../services/userService'
+import { getProfile, updateAddress, updateProfile } from '../services/userService'
 import Spinner from '../components/Spinner'
 import ToastNotification from '../components/ToastNotification'
 
+const emptyAddress = {
+  fullName: '',
+  phone: '',
+  addressLine1: '',
+  addressLine2: '',
+  city: '',
+  state: '',
+  postalCode: '',
+  country: 'India',
+}
+
+const getProfilePayload = (data) => data?.user || data?.data?.user || data?.data || data || {}
+
+const normalizeAddress = (data) => {
+  const address = data?.address || data?.shippingAddress || data?.defaultAddress || data || {}
+
+  return {
+    fullName: address.fullName || address.name || data?.name || '',
+    phone: address.phone || data?.phone || '',
+    addressLine1: address.addressLine1 || address.line1 || address.street || '',
+    addressLine2: address.addressLine2 || address.line2 || address.landmark || '',
+    city: address.city || '',
+    state: address.state || '',
+    postalCode: address.postalCode || address.zipCode || address.pincode || '',
+    country: address.country || 'India',
+  }
+}
+
 function ProfilePage({ currentUser, cartCount, isAdmin, onLogout }) {
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' })
+  const [address, setAddress] = useState(emptyAddress)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [status, setStatus] = useState({ type: '', message: '' })
+  const [isAddressSaving, setIsAddressSaving] = useState(false)
   const [toast, setToast] = useState({ type: '', message: '' })
   const [error, setError] = useState('')
 
@@ -21,13 +50,15 @@ function ProfilePage({ currentUser, cartCount, isAdmin, onLogout }) {
 
       try {
         const data = await getProfile()
+        const user = getProfilePayload(data)
 
         if (isMounted) {
           setProfile({
-            name: data.name || '',
-            email: data.email || '',
-            phone: data.phone || '',
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
           })
+          setAddress(normalizeAddress(user))
         }
       } catch (loadError) {
         if (isMounted) {
@@ -53,13 +84,19 @@ function ProfilePage({ currentUser, cartCount, isAdmin, onLogout }) {
       ...current,
       [name]: value,
     }))
-    setStatus({ type: '', message: '' })
+  }
+
+  const handleAddressChange = (event) => {
+    const { name, value } = event.target
+    setAddress((current) => ({
+      ...current,
+      [name]: value,
+    }))
   }
 
   const handleSubmit = async (event) => {
     event.preventDefault()
     setIsSaving(true)
-    setStatus({ type: '', message: '' })
     setError('')
     setToast({ type: '', message: '' })
 
@@ -73,6 +110,34 @@ function ProfilePage({ currentUser, cartCount, isAdmin, onLogout }) {
       setToast({ type: 'error', message })
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleAddressSubmit = async (event) => {
+    event.preventDefault()
+    setIsAddressSaving(true)
+    setError('')
+    setToast({ type: '', message: '' })
+
+    const sanitizedAddress = Object.fromEntries(
+      Object.entries(address).map(([key, value]) => [key, value.trim()]),
+    )
+
+    try {
+      const updated = await updateAddress(sanitizedAddress)
+      const updatedAddress = getProfilePayload(updated)
+      setAddress((current) => ({
+        ...current,
+        ...sanitizedAddress,
+        ...normalizeAddress(updatedAddress),
+      }))
+      setToast({ type: 'success', message: 'Address updated successfully.' })
+    } catch (submitError) {
+      const message = submitError.message || 'Unable to save address changes.'
+      setError(message)
+      setToast({ type: 'error', message })
+    } finally {
+      setIsAddressSaving(false)
     }
   }
 
@@ -156,6 +221,112 @@ function ProfilePage({ currentUser, cartCount, isAdmin, onLogout }) {
 
               <button type="submit" className="primary-button" disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save profile'}
+              </button>
+            </form>
+
+            <form onSubmit={handleAddressSubmit} className="profile-form profile-address-form">
+              <div className="profile-form-heading">
+                <p>Saved shipping address</p>
+                <h2>Address details</h2>
+              </div>
+
+              <label>
+                <span>Full name</span>
+                <input
+                  name="fullName"
+                  type="text"
+                  value={address.fullName}
+                  onChange={handleAddressChange}
+                  placeholder="Full name"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Phone</span>
+                <input
+                  name="phone"
+                  type="tel"
+                  value={address.phone}
+                  onChange={handleAddressChange}
+                  placeholder="+91 98765 43210"
+                  required
+                />
+              </label>
+
+              <label className="profile-field-wide">
+                <span>Address line 1</span>
+                <input
+                  name="addressLine1"
+                  type="text"
+                  value={address.addressLine1}
+                  onChange={handleAddressChange}
+                  placeholder="House number, street"
+                  required
+                />
+              </label>
+
+              <label className="profile-field-wide">
+                <span>Address line 2</span>
+                <input
+                  name="addressLine2"
+                  type="text"
+                  value={address.addressLine2}
+                  onChange={handleAddressChange}
+                  placeholder="Area, landmark"
+                />
+              </label>
+
+              <label>
+                <span>City</span>
+                <input
+                  name="city"
+                  type="text"
+                  value={address.city}
+                  onChange={handleAddressChange}
+                  placeholder="City"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>State</span>
+                <input
+                  name="state"
+                  type="text"
+                  value={address.state}
+                  onChange={handleAddressChange}
+                  placeholder="State"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Postal code</span>
+                <input
+                  name="postalCode"
+                  type="text"
+                  value={address.postalCode}
+                  onChange={handleAddressChange}
+                  placeholder="Postal code"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Country</span>
+                <input
+                  name="country"
+                  type="text"
+                  value={address.country}
+                  onChange={handleAddressChange}
+                  placeholder="Country"
+                  required
+                />
+              </label>
+
+              <button type="submit" className="primary-button" disabled={isAddressSaving}>
+                {isAddressSaving ? 'Saving...' : 'Save address'}
               </button>
             </form>
 
