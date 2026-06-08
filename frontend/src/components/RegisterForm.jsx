@@ -118,6 +118,7 @@ function RegisterForm({ onSwitchToLogin }) {
         <span>Full Name</span>
         <input
           name="name"
+          id="name"
           placeholder="John Doe"
           value={formData.name}
           onChange={handleChange}
@@ -132,6 +133,7 @@ function RegisterForm({ onSwitchToLogin }) {
         <input
           type="email"
           name="email"
+          id="email"
           placeholder="john@example.com"
           value={formData.email}
           onChange={handleChange}
@@ -145,6 +147,7 @@ function RegisterForm({ onSwitchToLogin }) {
         <span>Phone Number</span>
         <input
           name="phone"
+          id="phone"
           inputMode="numeric"
           maxLength="10"
           placeholder="9876543210"
@@ -161,6 +164,7 @@ function RegisterForm({ onSwitchToLogin }) {
         <input
           type="password"
           name="password"
+          id="password"
           placeholder="••••••••"
           value={formData.password}
           onChange={handleChange}
@@ -177,6 +181,7 @@ function RegisterForm({ onSwitchToLogin }) {
         <input
           type="password"
           name="confirmPassword"
+          id="confirmPassword"
           placeholder="••••••••"
           value={formData.confirmPassword}
           onChange={handleChange}

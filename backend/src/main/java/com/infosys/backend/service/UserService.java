@@ -25,13 +25,33 @@ public class UserService {
     }
 
     public User registerUser(User user) {
+        if (user == null) {
+            throw new BadRequestException("User details are required");
+        }
+
+        String email = normalizeEmail(user.getEmail());
+        if (email.isBlank()) {
+            throw new BadRequestException("Email is required");
+        }
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new BadRequestException("Password is required");
+        }
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new BadRequestException("Email is already registered");
+        }
+
+        user.setName(trimToNull(user.getName()));
+        user.setEmail(email);
+        user.setPhone(trimToNull(user.getPhone()));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("USER");
+
         return userRepository.save(user);
     }
 
     public AuthResponse authenticateUser(String email, String password) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -40,11 +60,18 @@ public class UserService {
 
         String token = jwtConfig.generateToken(user.getEmail(), user.getRole());
 
-        return new AuthResponse("Login successful", token, user.getEmail(), user.getName(), user.getRole());
+        return new AuthResponse(
+                "Login successful",
+                token,
+                user.getUserId(),
+                user.getEmail(),
+                user.getName(),
+                user.getRole(),
+                jwtConfig.getExpirationMs());
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -73,5 +100,18 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(passwordRequest.getNewPassword()));
         userRepository.save(user);
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

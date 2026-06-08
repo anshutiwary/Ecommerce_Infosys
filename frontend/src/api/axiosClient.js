@@ -9,6 +9,12 @@ const api = axios.create({
   },
 })
 
+const AUTH_ENDPOINTS = ['/users/login', '/users/logout', '/users/me']
+
+function isAuthEndpoint(url = '') {
+  return AUTH_ENDPOINTS.some((endpoint) => url.endsWith(endpoint))
+}
+
 api.interceptors.request.use(
   (config) => {
     const token = getToken()
@@ -35,8 +41,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status
+    const requestUrl = error.config?.url || ''
 
-    if (status === 401) {
+    if (status === 401 && !isAuthEndpoint(requestUrl)) {
       removeToken()
       window.dispatchEvent(new CustomEvent('authLogout', {
         detail: { reason: 'unauthorized' },

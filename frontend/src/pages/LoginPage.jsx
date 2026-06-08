@@ -1,6 +1,10 @@
+import { useLocation } from 'react-router-dom'
 import LoginForm from '../components/LoginForm'
 
 function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
+  const location = useLocation()
+  const requestedPath = location.state?.from?.pathname || '/'
+
   return (
     <main className="register-page">
       <section className="register-card">
@@ -13,6 +17,7 @@ function LoginPage({ onLoginSuccess, onSwitchToRegister }) {
         <LoginForm
           onLoginSuccess={onLoginSuccess}
           onSwitchToRegister={onSwitchToRegister}
+          requestedPath={requestedPath}
         />
       </section>
     </main>

@@ -10,7 +10,11 @@ function getApiErrorMessage(error, fallbackMessage) {
 export async function verifyStoredSession() {
   const token = getToken()
 
-  if (token && isTokenExpired(token)) {
+  if (!token) {
+    return null
+  }
+
+  if (isTokenExpired(token)) {
     removeToken()
     throw new Error('Session expired. Please sign in again.')
   }
@@ -36,9 +40,10 @@ export async function loginUser(credentials) {
   try {
     const response = await api.post(`${AUTH_BASE_URL}/login`, credentials)
     const responseData = response.data || { message: 'Login successful.' }
+    const token = responseData.accessToken || responseData.token || responseData.jwt
 
-    if (responseData.accessToken) {
-      setToken(responseData.accessToken)
+    if (token) {
+      setToken(token)
     }
 
     return responseData

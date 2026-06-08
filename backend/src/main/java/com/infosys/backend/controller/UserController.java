@@ -45,17 +45,24 @@ public class UserController {
                     loginRequest.getEmail(),
                     loginRequest.getPassword());
 
+            boolean secureCookie = isSecureRequest(request);
+            String sameSite = secureCookie ? "None" : "Lax";
+
             ResponseCookie authCookie = ResponseCookie.from("authToken", authResponse.getToken())
                     .httpOnly(true)
-                    .secure(false)
-                    .sameSite("Strict")
+                    .secure(secureCookie)
+                    .sameSite(sameSite)
                     .path("/")
-                    .maxAge(Duration.ofHours(1))
+                    .maxAge(Duration.ofMillis(authResponse.getExpiresInMs()))
                     .build();
+
+            Map<String, Object> responsePayload = toLoginResponse(authResponse);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, authCookie.toString())
-                    .body(toLoginResponse(authResponse, shouldExposeToken(request)));
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + authResponse.getToken())
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                    .body(responsePayload);
         } catch (RuntimeException ex) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -64,11 +71,14 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        boolean secureCookie = isSecureRequest(request);
+        String sameSite = secureCookie ? "None" : "Lax";
+
         ResponseCookie expiredCookie = ResponseCookie.from("authToken", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Strict")
+                .secure(secureCookie)
+                .sameSite(sameSite)
                 .path("/")
                 .maxAge(0)
                 .build();
@@ -164,24 +174,32 @@ public class UserController {
         return response;
     }
 
-    private Map<String, Object> toLoginResponse(AuthResponse authResponse, boolean exposeToken) {
+    private Map<String, Object> toLoginResponse(AuthResponse authResponse) {
         Map<String, Object> response = new LinkedHashMap<>();
+        Map<String, Object> user = new LinkedHashMap<>();
 
         response.put("message", authResponse.getMessage());
+        response.put("accessToken", authResponse.getToken());
+        response.put("token", authResponse.getToken());
+        response.put("tokenType", "Bearer");
+        response.put("expiresInMs", authResponse.getExpiresInMs());
+        response.put("userId", authResponse.getUserId());
         response.put("email", authResponse.getEmail());
         response.put("name", authResponse.getName());
         response.put("role", authResponse.getRole());
 
-        if (exposeToken) {
-            response.put("accessToken", authResponse.getToken());
-        }
+        user.put("userId", authResponse.getUserId());
+        user.put("email", authResponse.getEmail());
+        user.put("name", authResponse.getName());
+        user.put("role", authResponse.getRole());
+        response.put("user", user);
 
         return response;
     }
 
-    private boolean shouldExposeToken(HttpServletRequest request) {
-        String userAgent = request.getHeader(HttpHeaders.USER_AGENT);
+    private boolean isSecureRequest(HttpServletRequest request) {
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
 
-        return userAgent != null && userAgent.contains("PostmanRuntime");
+        return request.isSecure() || "https".equalsIgnoreCase(forwardedProto);
     }
 }

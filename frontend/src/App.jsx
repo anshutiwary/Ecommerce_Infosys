@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import {
   BrowserRouter,
   Navigate,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from 'react-router-dom'
 import DashboardPage from './pages/DashboardPage'
@@ -18,6 +20,7 @@ import ChangePasswordPage from './pages/ChangePasswordPage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import RegisterPage from './pages/RegisterPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import Footer from './components/Footer'
 import { getCart } from './services/cartService'
 import {
   logoutUser,
@@ -58,10 +61,23 @@ const isAdminUser = (user) =>
   Boolean(user?.isAdmin || user?.admin || user?.data?.isAdmin || user?.user?.isAdmin) ||
   getUserRoles(user).some((role) => role === 'admin' || role === 'role_admin')
 
+const resolvePostLoginPath = (user, requestedPath = '/') => {
+  if (requestedPath && !['/', '/login', '/register'].includes(requestedPath)) {
+    if (requestedPath === '/dashboard' && !isAdminUser(user)) {
+      return '/'
+    }
+
+    return requestedPath
+  }
+
+  return isAdminUser(user) ? '/dashboard' : '/'
+}
+
 function AppRoutes() {
   const [currentUser, setCurrentUser] = useState(null)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [cartCount, setCartCount] = useState(0)
+  const location = useLocation()
   const navigate = useNavigate()
 
   const loadCartCount = useCallback(async () => {
@@ -84,7 +100,14 @@ function AppRoutes() {
           return
         }
 
-        setCurrentUser(getUserFromSession(sessionUser))
+        const restoredUser = getUserFromSession(sessionUser)
+        if (!restoredUser) {
+          setCurrentUser(null)
+          setCartCount(0)
+          return
+        }
+
+        setCurrentUser(restoredUser)
         await loadCartCount()
       } catch {
         if (!isMounted) {
@@ -109,13 +132,13 @@ function AppRoutes() {
 
   const handleLoginSuccess = async (userData, requestedPath = '/') => {
     const nextUser = getUserFromSession(userData)
+    const nextPath = resolvePostLoginPath(nextUser, requestedPath)
 
-    setCurrentUser(nextUser)
-    await loadCartCount()
-    navigate(
-      requestedPath === '/dashboard' && isAdminUser(nextUser) ? '/dashboard' : '/',
-      { replace: true },
-    )
+    flushSync(() => {
+      setCurrentUser(nextUser)
+    })
+    void loadCartCount()
+    navigate(nextPath, { replace: true })
   }
 
   const handleLogout = useCallback(async () => {
@@ -124,6 +147,18 @@ function AppRoutes() {
     setCartCount(0)
     navigate('/login', { replace: true })
   }, [navigate])
+
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === 'undefined') {
+      return 'light'
+    }
+    return window.localStorage.getItem('theme') || 'light'
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem('theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const handleAuthLogout = () => {
@@ -136,6 +171,10 @@ function AppRoutes() {
       window.removeEventListener('authLogout', handleAuthLogout)
     }
   }, [handleLogout])
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'))
+  }
 
   if (isCheckingSession) {
     return (
@@ -151,7 +190,8 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route
         path="/"
         element={
@@ -164,7 +204,7 @@ function AppRoutes() {
               onLogout={handleLogout}
             />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" replace state={{ from: location }} />
           )
         }
       />
@@ -199,7 +239,7 @@ function AppRoutes() {
           ) : currentUser ? (
             <Navigate to="/" replace />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" replace state={{ from: location }} />
           )
         }
       />
@@ -215,7 +255,7 @@ function AppRoutes() {
               onLogout={handleLogout}
             />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" replace state={{ from: location }} />
           )
         }
       />
@@ -231,7 +271,7 @@ function AppRoutes() {
               onLogout={handleLogout}
             />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" replace state={{ from: location }} />
           )
         }
       />
@@ -247,7 +287,7 @@ function AppRoutes() {
               onLogout={handleLogout}
             />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" replace state={{ from: location }} />
           )
         }
       />
@@ -262,7 +302,7 @@ function AppRoutes() {
               onLogout={handleLogout}
             />
           ) : (
-            <Navigate to="/login" replace />
+            <Navigate to="/login" replace state={{ from: location }} />
           )
         }
       />
@@ -307,6 +347,8 @@ function AppRoutes() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <Footer theme={theme} onToggleTheme={toggleTheme} />
+  </>
   )
 }
 

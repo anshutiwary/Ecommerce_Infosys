@@ -6,7 +6,7 @@ const initialFormData = {
   password: '',
 }
 
-function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
+function LoginForm({ onLoginSuccess, onSwitchToRegister, requestedPath = '/' }) {
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState({ type: '', message: '' })
@@ -54,7 +54,6 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    const requestedPath = '/'
 
     if (!validateForm()) {
       return
@@ -70,12 +69,8 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
       })
 
       setErrors({})
-      setStatus({
-        type: 'success',
-        message: result.message || 'Login successful.',
-      })
       setFormData(initialFormData)
-      onLoginSuccess({
+      await onLoginSuccess({
         email: formData.email.trim(),
         ...result,
       }, requestedPath)
@@ -101,6 +96,7 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
         <input
           type="email"
           name="email"
+          id="email"
           placeholder="john@example.com"
           value={formData.email}
           onChange={handleChange}
@@ -115,6 +111,7 @@ function LoginForm({ onLoginSuccess, onSwitchToRegister }) {
         <input
           type="password"
           name="password"
+          id="password"
           placeholder="••••••••"
           value={formData.password}
           onChange={handleChange}

@@ -38,6 +38,10 @@ public class JwtConfig {
                 .compact();
     }
 
+    public long getExpirationMs() {
+        return jwtExpirationMs;
+    }
+
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
     }
