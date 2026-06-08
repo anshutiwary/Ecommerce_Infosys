@@ -16,7 +16,7 @@ public class SessionHandlingTest extends BaseTest {
 
 	@BeforeMethod
 	public void setupUser() {
-		// Create a fresh user for each test to ensure reliable login
+
 		driver.get(TestConfig.BASE_URL + "register");
 		RegisterPage registerPage = new RegisterPage(driver);
 		uniqueEmail = "session_user_" + System.currentTimeMillis() + "@example.com";
@@ -70,7 +70,7 @@ public class SessionHandlingTest extends BaseTest {
 		HomePage homePage = new HomePage(driver);
 		homePage.clickLogout();
 
-		// Attempt to access a protected page
+
 		driver.get(TestConfig.BASE_URL + "profile");
 		
 		LoginPage loginPage = new LoginPage(driver);
@@ -82,7 +82,7 @@ public class SessionHandlingTest extends BaseTest {
 	public void shouldNotRestoreProtectedPageUsingBackButtonAfterLogout() {
 		performLogin();
 		
-		// Navigate to a protected page
+
 		driver.get(TestConfig.BASE_URL + "profile");
 		
 		HomePage homePage = new HomePage(driver);
@@ -91,10 +91,10 @@ public class SessionHandlingTest extends BaseTest {
 		LoginPage loginPage = new LoginPage(driver);
 		Assert.assertTrue(loginPage.isLoginPageDisplayed(), "Should be on login page after logout.");
 
-		// Simulate browser back button
+
 		driver.navigate().back();
 
-		// Verify we are not allowed back into the protected page
+
 		Assert.assertTrue(loginPage.isLoginPageDisplayed(), "Browser back button should not bypass authentication.");
 	}
 
@@ -102,10 +102,10 @@ public class SessionHandlingTest extends BaseTest {
 	public void shouldRedirectWhenSessionIsInvalidatedManually() {
 		performLogin();
 		
-		// Manually clear session token
+
 		clearSessionToken();
 
-		// Attempt to access a protected page
+
 		driver.get(TestConfig.BASE_URL + "profile");
 
 		LoginPage loginPage = new LoginPage(driver);
