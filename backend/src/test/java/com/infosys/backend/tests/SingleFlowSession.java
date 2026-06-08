@@ -8,7 +8,7 @@ import com.infosys.backend.utilities.TestConfig;
 import com.infosys.backend.utilities.WaitUtils;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
-import org.testng.Assert;
+import org.testng.Assert;	
 import org.testng.annotations.Test;
 
 public class SingleFlowSession extends BaseTest {
