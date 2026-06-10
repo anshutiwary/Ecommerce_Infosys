@@ -29,15 +29,7 @@ public class LoginPage extends BasePage {
 	}
 
 	public void open() {
-		new WebDriverWait(driver, LOGIN_WAIT)
-				.until(currentDriver -> {
-					try {
-						currentDriver.get(TestConfig.BASE_URL + "login");
-						return currentDriver.getCurrentUrl().contains("/login");
-					} catch (WebDriverException exception) {
-						return false;
-					}
-				});
+		driver.get(TestConfig.BASE_URL + "login");
 		waitForLoginPageLoaded();
 	}
 
@@ -114,39 +106,7 @@ public class LoginPage extends BasePage {
 		return WaitUtils.waitForElementVisible(driver, locator).getAttribute("validationMessage");
 	}
 
-	public By loginForm() {
-		return LOGIN_FORM;
-	}
-
-	public By loginHeading() {
-		return LOGIN_HEADING;
-	}
-
-	public By emailInput() {
-		return EMAIL_INPUT;
-	}
-
-	public By passwordInput() {
-		return PASSWORD_INPUT;
-	}
-
-	public By loginButton() {
-		return LOGIN_BUTTON;
-	}
-
-	public By registerLink() {
-		return REGISTER_LINK;
-	}
-
-	public By statusMessage() {
-		return STATUS_MESSAGE;
-	}
-
-	public By emailError() {
-		return EMAIL_ERROR;
-	}
-
-	public By passwordError() {
-		return PASSWORD_ERROR;
+	public void clickRegisterLink() {
+		WaitUtils.waitForElementClickable(driver, REGISTER_LINK).click();
 	}
 }

@@ -38,7 +38,7 @@ public class InvalidLoginTest extends BaseTest {
 	private void assertLoginDidNotNavigate(LoginPage loginPage) {
 		Assert.assertNotNull(loginPage, "Login page object should be initialized.");
 		Assert.assertTrue(loginPage.isLoginPageDisplayed(), "Login page should remain displayed.");
-		Assert.assertTrue(driver.getCurrentUrl().contains("/login"), "Invalid login should remain on login page.");
-		Assert.assertFalse(driver.getCurrentUrl().contains("/dashboard"), "Invalid login should not navigate to dashboard.");
+		Assert.assertTrue(loginPage.getCurrentUrl().contains("/login"), "Invalid login should remain on login page.");
+		Assert.assertFalse(loginPage.getCurrentUrl().contains("/dashboard"), "Invalid login should not navigate to dashboard.");
 	}
 }

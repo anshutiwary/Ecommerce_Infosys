@@ -37,15 +37,7 @@ public class RegisterPage extends BasePage {
 	}
 
 	public void open() {
-		new WebDriverWait(driver, REGISTRATION_WAIT)
-				.until(currentDriver -> {
-					try {
-						currentDriver.get(TestConfig.BASE_URL + "register");
-						return currentDriver.getCurrentUrl().contains("/register");
-					} catch (WebDriverException exception) {
-						return false;
-					}
-				});
+		driver.get(TestConfig.BASE_URL + "register");
 		waitForRegistrationPageLoaded();
 	}
 
@@ -242,63 +234,13 @@ public class RegisterPage extends BasePage {
 		return phone.length() > 10 ? phone.substring(0, 10) : phone;
 	}
 
-	public By registerForm() {
-		return REGISTER_FORM;
+	public boolean isRegisterPageDisplayed() {
+		return new WebDriverWait(driver, REGISTRATION_WAIT)
+				.until(ExpectedConditions.visibilityOfElementLocated(REGISTER_HEADING))
+				.isDisplayed();
 	}
 
-	public By registerHeading() {
-		return REGISTER_HEADING;
-	}
-
-	public By fullNameInput() {
-		return FULL_NAME_INPUT;
-	}
-
-	public By emailInput() {
-		return EMAIL_INPUT;
-	}
-
-	public By phoneInput() {
-		return PHONE_INPUT;
-	}
-
-	public By passwordInput() {
-		return PASSWORD_INPUT;
-	}
-
-	public By confirmPasswordInput() {
-		return CONFIRM_PASSWORD_INPUT;
-	}
-
-	public By createAccountButton() {
-		return CREATE_ACCOUNT_BUTTON;
-	}
-
-	public By loginLink() {
-		return LOGIN_LINK;
-	}
-
-	public By statusMessage() {
-		return STATUS_MESSAGE;
-	}
-
-	public By fullNameError() {
-		return FULL_NAME_ERROR;
-	}
-
-	public By emailError() {
-		return EMAIL_ERROR;
-	}
-
-	public By phoneError() {
-		return PHONE_ERROR;
-	}
-
-	public By passwordError() {
-		return PASSWORD_ERROR;
-	}
-
-	public By confirmPasswordError() {
-		return CONFIRM_PASSWORD_ERROR;
+	public void clickLoginLink() {
+		WaitUtils.waitForElementVisible(driver, LOGIN_LINK).sendKeys(Keys.ENTER);
 	}
 }

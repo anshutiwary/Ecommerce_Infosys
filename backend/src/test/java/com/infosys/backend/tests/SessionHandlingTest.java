@@ -3,7 +3,7 @@ package com.infosys.backend.tests;
 import com.infosys.backend.base.BaseTest;
 import com.infosys.backend.pages.HomePage;
 import com.infosys.backend.pages.LoginPage;
-import com.infosys.backend.pages.RegisterPage;
+import com.infosys.backend.utilities.AuthUtils;
 import com.infosys.backend.utilities.TestConfig;
 import org.openqa.selenium.JavascriptExecutor;
 import org.testng.Assert;
@@ -16,19 +16,11 @@ public class SessionHandlingTest extends BaseTest {
 
 	@BeforeMethod
 	public void setupUser() {
-
-		driver.get(TestConfig.BASE_URL + "register");
-		RegisterPage registerPage = new RegisterPage(driver);
-		uniqueEmail = "session_user_" + System.currentTimeMillis() + "@example.com";
-		registerPage.registerUser("Session Tester", uniqueEmail, "1234567890", "Test@1234");
-		Assert.assertTrue(registerPage.isRegistrationSuccessful(), "Registration should succeed for session tests.");
+		uniqueEmail = AuthUtils.registerNewUser(driver, "session_user");
 	}
 
 	private void performLogin() {
-		driver.get(TestConfig.BASE_URL + "login");
-		LoginPage loginPage = new LoginPage(driver);
-		loginPage.login(uniqueEmail, "Test@1234");
-		Assert.assertTrue(loginPage.waitForSuccessfulLoginNavigation(), "User should navigate away from login page.");
+		AuthUtils.performLogin(driver, uniqueEmail, "Test@1234");
 	}
 
 	private String getSessionToken() {
@@ -75,7 +67,7 @@ public class SessionHandlingTest extends BaseTest {
 		
 		LoginPage loginPage = new LoginPage(driver);
 		Assert.assertTrue(loginPage.isLoginPageDisplayed(), "Application should redirect to Login page when accessing protected route.");
-		Assert.assertTrue(driver.getCurrentUrl().contains("/login"), "URL should be redirected to /login.");
+		Assert.assertTrue(loginPage.getCurrentUrl().contains("/login"), "URL should be redirected to /login.");
 	}
 
 	@Test

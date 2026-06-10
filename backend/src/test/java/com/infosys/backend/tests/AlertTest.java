@@ -6,12 +6,13 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import com.infosys.backend.utilities.AlertUtils;
+import com.infosys.backend.pages.LoginPage;
 
 public class AlertTest extends BaseTest {
 
 	@Test
 	public void shouldAcceptAlert() {
-		driver.get(TestConfig.BASE_URL + "login");
+		new LoginPage(driver).open();
 		((JavascriptExecutor) driver).executeScript("alert('Test Alert');");
 		
 		Assert.assertTrue(AlertUtils.isAlertPresent(driver), "Alert should be present.");
@@ -23,7 +24,7 @@ public class AlertTest extends BaseTest {
 
 	@Test
 	public void shouldDismissAlert() {
-		driver.get(TestConfig.BASE_URL + "login");
+		new LoginPage(driver).open();
 		((JavascriptExecutor) driver).executeScript("confirm('Test Confirm');");
 		
 		Assert.assertTrue(AlertUtils.isAlertPresent(driver), "Confirm alert should be present.");
@@ -35,7 +36,7 @@ public class AlertTest extends BaseTest {
 
 	@Test
 	public void shouldHandlePromptAlert() {
-		driver.get(TestConfig.BASE_URL + "login");
+		new LoginPage(driver).open();
 		((JavascriptExecutor) driver).executeScript("prompt('Test Prompt', 'Default Text');");
 		
 		Assert.assertTrue(AlertUtils.isAlertPresent(driver), "Prompt alert should be present.");

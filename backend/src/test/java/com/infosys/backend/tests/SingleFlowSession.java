@@ -5,7 +5,7 @@ import com.infosys.backend.pages.LoginPage;
 import com.infosys.backend.pages.RegisterPage;
 import com.infosys.backend.utilities.AlertUtils;
 import com.infosys.backend.utilities.TestConfig;
-import com.infosys.backend.utilities.WaitUtils;
+
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.testng.Assert;	
@@ -16,9 +16,9 @@ public class SingleFlowSession extends BaseTest {
 	@Test
 	public void executeEndToEndSession() {
 
-		driver.get(TestConfig.BASE_URL + "register");
 		RegisterPage registerPage = new RegisterPage(driver);
-		Assert.assertTrue(WaitUtils.waitForElementVisible(driver, registerPage.registerHeading()).isDisplayed(), "Register page should load.");
+		registerPage.open();
+		Assert.assertTrue(registerPage.isRegisterPageDisplayed(), "Register page should load.");
 
 
 		registerPage.submitRegistration();
@@ -31,7 +31,7 @@ public class SingleFlowSession extends BaseTest {
 		Assert.assertTrue(registerPage.isRegistrationSuccessful(), "Registration should complete successfully.");
 
 
-		WaitUtils.waitForElementVisible(driver, registerPage.loginLink()).click();
+		registerPage.clickLoginLink();
 		LoginPage loginPage = new LoginPage(driver);
 		Assert.assertTrue(loginPage.isLoginPageDisplayed(), "Login page should display after clicking link.");
 
