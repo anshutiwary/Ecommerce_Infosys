@@ -62,10 +62,26 @@ public class HomePage extends BasePage {
 		if (index >= 0 && index < productCards.size()) {
 			WebElement card = productCards.get(index);
 			WebElement link = card.findElement(VIEW_DETAILS_LINK);
-			
-			// Scroll into view to ensure it's loaded, then click using JS to avoid interception
 			((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", link);
 			((JavascriptExecutor) driver).executeScript("arguments[0].click();", link);
+		} else {
+			throw new IndexOutOfBoundsException("Product index out of bounds: " + index);
+		}
+	}
+
+	public String getProductTitle(int index) {
+		List<WebElement> productCards = getProductCards();
+		if (index >= 0 && index < productCards.size()) {
+			return productCards.get(index).findElement(PRODUCT_TITLE).getText().trim();
+		} else {
+			throw new IndexOutOfBoundsException("Product index out of bounds: " + index);
+		}
+	}
+
+	public String getProductPrice(int index) {
+		List<WebElement> productCards = getProductCards();
+		if (index >= 0 && index < productCards.size()) {
+			return productCards.get(index).findElement(PRODUCT_PRICE).getText().trim();
 		} else {
 			throw new IndexOutOfBoundsException("Product index out of bounds: " + index);
 		}

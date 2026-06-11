@@ -16,7 +16,7 @@ public class ProductListingTest extends BaseTest {
 
 	@BeforeMethod
 	public void setupAndLogin() {
-		// Register a fresh user and log in to access the protected Home/Listing page
+
 		String email = AuthUtils.registerNewUser(driver, "listing_user");
 		AuthUtils.performLogin(driver, email, "Test@1234");
 		
@@ -66,10 +66,10 @@ public class ProductListingTest extends BaseTest {
 		List<String> titles = homePage.getProductTitles();
 		String expectedTitle = titles.get(0);
 
-		// Click the first product's details link
+
 		homePage.clickProductDetails(0);
 
-		// Verify navigation to product details route
+
 		boolean isProductRoute = homePage.waitForUrlContains("/product/");
 		Assert.assertTrue(isProductRoute, "Should navigate to a /product/ details route.");
 	}

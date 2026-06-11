@@ -49,4 +49,12 @@ public final class WaitUtils {
 			Thread.currentThread().interrupt();
 		}
 	}
+
+	public static void pause(int milliseconds) {
+		try {
+			Thread.sleep(milliseconds);
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+		}
+	}
 }
