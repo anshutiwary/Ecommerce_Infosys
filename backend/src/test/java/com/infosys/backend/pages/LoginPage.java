@@ -34,13 +34,13 @@ public class LoginPage extends BasePage {
 	}
 
 	public void enterEmail(String email) {
-		WaitUtils.waitForElementVisible(driver, EMAIL_INPUT).sendKeys(email);
-		waitForInputValue(EMAIL_INPUT, email);
+		enterText(EMAIL_INPUT, email);
+		waitForInputValue(EMAIL_INPUT, email, LOGIN_WAIT);
 	}
 
 	public void enterPassword(String password) {
-		WaitUtils.waitForElementVisible(driver, PASSWORD_INPUT).sendKeys(password);
-		waitForInputValue(PASSWORD_INPUT, password);
+		enterText(PASSWORD_INPUT, password);
+		waitForInputValue(PASSWORD_INPUT, password, LOGIN_WAIT);
 	}
 
 	public void submitLogin() {
@@ -59,21 +59,19 @@ public class LoginPage extends BasePage {
 	}
 
 	public boolean isLoginPageDisplayed() {
-		return new WebDriverWait(driver, LOGIN_WAIT)
-				.until(ExpectedConditions.visibilityOfElementLocated(LOGIN_HEADING))
-				.isDisplayed();
+		return isElementDisplayed(LOGIN_HEADING);
 	}
 
 	public String getEmailErrorMessage() {
-		return getMessageText(EMAIL_ERROR);
+		return getText(EMAIL_ERROR);
 	}
 
 	public String getPasswordErrorMessage() {
-		return getMessageText(PASSWORD_ERROR);
+		return getText(PASSWORD_ERROR);
 	}
 
 	public String getStatusMessage() {
-		return getMessageText(STATUS_MESSAGE);
+		return getText(STATUS_MESSAGE);
 	}
 
 	public String getEmailValidationMessage() {
@@ -91,22 +89,7 @@ public class LoginPage extends BasePage {
 		wait.until(ExpectedConditions.visibilityOfElementLocated(LOGIN_HEADING));
 	}
 
-	private void waitForInputValue(By locator, String value) {
-		new WebDriverWait(driver, LOGIN_WAIT)
-				.until(ExpectedConditions.attributeToBe(locator, "value", value));
-	}
-
-	private String getMessageText(By locator) {
-		return new WebDriverWait(driver, LOGIN_WAIT)
-				.until(ExpectedConditions.visibilityOfElementLocated(locator))
-				.getText();
-	}
-
-	private String getValidationMessage(By locator) {
-		return WaitUtils.waitForElementVisible(driver, locator).getAttribute("validationMessage");
-	}
-
 	public void clickRegisterLink() {
-		WaitUtils.waitForElementClickable(driver, REGISTER_LINK).click();
+		clickElement(REGISTER_LINK);
 	}
 }

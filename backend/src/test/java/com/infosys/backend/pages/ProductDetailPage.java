@@ -18,30 +18,18 @@ public class ProductDetailPage extends BasePage {
     }
 
     public boolean isProductTitleDisplayed() {
-        try {
-            WebElement titleElement = new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .until(ExpectedConditions.visibilityOfElementLocated(PRODUCT_TITLE));
-            return titleElement.isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        return isElementDisplayed(PRODUCT_TITLE);
     }
 
     public boolean isProductPriceDisplayed() {
-        try {
-            WebElement priceElement = new WebDriverWait(driver, Duration.ofSeconds(10))
-                    .until(ExpectedConditions.visibilityOfElementLocated(PRODUCT_PRICE));
-            return priceElement.isDisplayed();
-        } catch (Exception e) {
-            return false;
-        }
+        return isElementDisplayed(PRODUCT_PRICE);
     }
 
     public String getProductName() {
-        return WaitUtils.waitForElementVisible(driver, PRODUCT_TITLE).getText().trim();
+        return getText(PRODUCT_TITLE);
     }
 
     public String getProductPrice() {
-        return WaitUtils.waitForElementVisible(driver, PRODUCT_PRICE).getText().trim();
+        return getText(PRODUCT_PRICE);
     }
 }

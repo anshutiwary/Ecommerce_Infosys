@@ -57,4 +57,16 @@ public final class WaitUtils {
 			Thread.currentThread().interrupt();
 		}
 	}
+
+	public static <T> T retryOnStaleElement(WebDriver driver, java.util.function.Function<WebDriver, T> function) {
+		return new WebDriverWait(driver, EXPLICIT_WAIT)
+				.ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+				.until(function);
+	}
+
+	public static java.util.List<WebElement> waitForElementsVisible(WebDriver driver, By locator) {
+		return new WebDriverWait(driver, EXPLICIT_WAIT)
+				.ignoring(org.openqa.selenium.StaleElementReferenceException.class)
+				.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(locator));
+	}
 }

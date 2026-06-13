@@ -42,28 +42,28 @@ public class RegisterPage extends BasePage {
 	}
 
 	public void enterFullName(String fullName) {
-		WaitUtils.waitForElementVisible(driver, FULL_NAME_INPUT).sendKeys(fullName);
-		waitForInputValue(FULL_NAME_INPUT, fullName);
+		enterText(FULL_NAME_INPUT, fullName);
+		waitForInputValue(FULL_NAME_INPUT, fullName, REGISTRATION_WAIT);
 	}
 
 	public void enterEmail(String email) {
-		WaitUtils.waitForElementVisible(driver, EMAIL_INPUT).sendKeys(email);
-		waitForInputValue(EMAIL_INPUT, email);
+		enterText(EMAIL_INPUT, email);
+		waitForInputValue(EMAIL_INPUT, email, REGISTRATION_WAIT);
 	}
 
 	public void enterPhone(String phone) {
-		WaitUtils.waitForElementVisible(driver, PHONE_INPUT).sendKeys(phone);
-		waitForInputValue(PHONE_INPUT, acceptedPhoneValue(phone));
+		enterText(PHONE_INPUT, phone);
+		waitForInputValue(PHONE_INPUT, acceptedPhoneValue(phone), REGISTRATION_WAIT);
 	}
 
 	public void enterPassword(String password) {
-		WaitUtils.waitForElementVisible(driver, PASSWORD_INPUT).sendKeys(password);
-		waitForInputValue(PASSWORD_INPUT, password);
+		enterText(PASSWORD_INPUT, password);
+		waitForInputValue(PASSWORD_INPUT, password, REGISTRATION_WAIT);
 	}
 
 	public void enterConfirmPassword(String confirmPassword) {
-		WaitUtils.waitForElementVisible(driver, CONFIRM_PASSWORD_INPUT).sendKeys(confirmPassword);
-		waitForInputValue(CONFIRM_PASSWORD_INPUT, confirmPassword);
+		enterText(CONFIRM_PASSWORD_INPUT, confirmPassword);
+		waitForInputValue(CONFIRM_PASSWORD_INPUT, confirmPassword, REGISTRATION_WAIT);
 	}
 
 	public void submitRegistration() {
@@ -131,23 +131,23 @@ public class RegisterPage extends BasePage {
 	}
 
 	public String getFullNameErrorMessage() {
-		return getMessageText(FULL_NAME_ERROR);
+		return getText(FULL_NAME_ERROR);
 	}
 
 	public String getEmailErrorMessage() {
-		return getMessageText(EMAIL_ERROR);
+		return getText(EMAIL_ERROR);
 	}
 
 	public String getPhoneErrorMessage() {
-		return getMessageText(PHONE_ERROR);
+		return getText(PHONE_ERROR);
 	}
 
 	public String getPasswordErrorMessage() {
-		return getMessageText(PASSWORD_ERROR);
+		return getText(PASSWORD_ERROR);
 	}
 
 	public String getConfirmPasswordErrorMessage() {
-		return getMessageText(CONFIRM_PASSWORD_ERROR);
+		return getText(CONFIRM_PASSWORD_ERROR);
 	}
 
 	public String getFullNameValidationMessage() {
@@ -199,29 +199,10 @@ public class RegisterPage extends BasePage {
 		wait.until(ExpectedConditions.visibilityOfElementLocated(REGISTER_HEADING));
 	}
 
-	private void waitForInputValue(By locator, String value) {
-		new WebDriverWait(driver, REGISTRATION_WAIT)
-				.until(ExpectedConditions.attributeToBe(locator, "value", value));
-	}
-
 	private boolean waitForError(By locator) {
 		return new WebDriverWait(driver, REGISTRATION_WAIT)
 				.until(ExpectedConditions.visibilityOfElementLocated(locator))
 				.isDisplayed();
-	}
-
-	private String getInputValue(By locator) {
-		return WaitUtils.waitForElementVisible(driver, locator).getAttribute("value");
-	}
-
-	private String getMessageText(By locator) {
-		return new WebDriverWait(driver, REGISTRATION_WAIT)
-				.until(ExpectedConditions.visibilityOfElementLocated(locator))
-				.getText();
-	}
-
-	private String getValidationMessage(By locator) {
-		return WaitUtils.waitForElementVisible(driver, locator).getAttribute("validationMessage");
 	}
 
 	private boolean isInputInvalid(By locator) {
@@ -235,9 +216,7 @@ public class RegisterPage extends BasePage {
 	}
 
 	public boolean isRegisterPageDisplayed() {
-		return new WebDriverWait(driver, REGISTRATION_WAIT)
-				.until(ExpectedConditions.visibilityOfElementLocated(REGISTER_HEADING))
-				.isDisplayed();
+		return isElementDisplayed(REGISTER_HEADING);
 	}
 
 	public void clickLoginLink() {
